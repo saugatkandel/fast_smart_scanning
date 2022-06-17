@@ -2,7 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 setup(
-    name='SLADS-Net',
+    name='sladsnet',
     version='0.0.1',
     author='-',
     author_email='-',
