@@ -35,4 +35,4 @@ class Result:
         return dt.asdict(self.outputs)
 
     def save(self, path: str):
-        joblib.dump(self.get(), path)
+        joblib.dump(self.get(), path + '.pkl')
