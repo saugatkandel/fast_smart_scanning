@@ -6,18 +6,12 @@ import numpy as np
 import tifffile as tif
 from tqdm.notebook import tqdm
 
-from .base import SimulatedSample
 from .erd import SladsSklearnModel, SladsModelParams
 from .measurement_interface import TransmissionSimulationMeasurementInterface
 from .results import Result
 from .sampling import run_sampling
-from ..input_params import TrainingInputParams, GeneralInputParams, ERDInputParams, SampleParams
-
-
-class SimulatedSampleParams(SampleParams):
-    def __init__(self, image, *args, **kwargs):
-        self.image = image
-        super().__init__(image.shape, *args, **kwargs)
+from .simulation_base import SimulatedSample
+from ..input_params import TrainingInputParams, GeneralInputParams, ERDInputParams, SimulatedSampleParams
 
 
 def generate_database_per_c(sample_params_all, c_value,
@@ -33,7 +27,8 @@ def generate_database_per_c(sample_params_all, c_value,
                                 calculate_full_erd_per_step=calculate_full_erd_per_step)
     params_gen = GeneralInputParams(num_neighbors=10)
     results_all = Result(c_value=c_value)
-    for index in tqdm(range(0, len(sample_params_all)), desc='Samples', leave=False, ascii=True):
+    for index in tqdm(range(0, len(sample_params_all)), desc=f'Testing for c={c_value:4.3g}; Samples',
+                      leave=False, ascii=True):
         for mask_num in tqdm(range(0, num_repeats_per_mask), desc='Masks', leave=False, ascii=True):
             # Make a copy of the sample
             sample_params = copy.deepcopy(sample_params_all[index])
@@ -51,20 +46,13 @@ def generate_database_per_c(sample_params_all, c_value,
 
 def save_database_per_c(results_all: Result,
                         results_dir: str,
-                        shuffle: bool = True,
-                        training_split: float = 0.9,
                         save_type: str = 'slads-net-reduced'):
     assert save_type in ['slads-net-reduced', 'generic']
     results_dir = Path(results_dir)
 
-    # Separate training and validation data from results
-    training_database, validation_database = [], []
-    indices_all = np.arange(results_all.size)
-    if shuffle:
-        np.random.shuffle(indices_all)
-    for index in tqdm(range(results_all.size), desc='Set Separation', leave=False, ascii=True):
-
-        results_this = results_all.get_by_index(indices_all[index])
+    training_database = []
+    for index in range(results_all.size):
+        results_this = results_all.get_by_index(index)
         results_to_write = {}
         if save_type == 'slads-net-reduced':
             results_to_write['poly_features'] = results_this['poly_features']
@@ -75,21 +63,12 @@ def save_database_per_c(results_all: Result,
         else:
             results_to_write = results_this
 
-        # Determine if result data should go into training or validation sets
-        if index < results_all.size * training_split:
-            training_database.append(results_to_write)
-        else:
-            validation_database.append(results_to_write)
+        training_database.append(results_to_write)
 
     # Save the complete databases
     with open(results_dir / 'training_database.pkl', 'wb') as f:
-        print('training db...')
         joblib.dump(training_database, f)
-    with open(results_dir / 'validation_database.pkl', 'wb') as f:
-        print('validation db...')
-        joblib.dump(validation_database, f)
-
-    return training_database, validation_database
+    return training_database
 
 
 def _emulate_experimental_sampling(sample_params, measurement_interface, params_erd, params_gen, results):
@@ -97,8 +76,7 @@ def _emulate_experimental_sampling(sample_params, measurement_interface, params_
     (sample_params.initial_idxs,
      sample_params.initial_mask) = sample_params.generate_initial_mask(sample_params.scan_method)
 
-    sample = SimulatedSample(simulation_type='training',
-                             sample_params=sample_params,
+    sample = SimulatedSample(sample_params=sample_params,
                              general_params=params_gen,
                              erd_params=params_erd,
                              measurement_interface=measurement_interface,
@@ -115,14 +93,13 @@ def _run_fast_limited_sampling(sample_params, measurement_interface,
     rand_dist = sample_params.rng.random(measurements_per_initial_mask)
     test_ratios = np.sort((stop_ratio - start_ratio) * rand_dist + start_ratio)
 
-    for ratio in tqdm(test_ratios, leave=False):
+    for ratio in tqdm(test_ratios, leave=False, desc='Iterating through test sampling ratios.'):
         p_this = copy.deepcopy(sample_params)
         p_this.initial_scan_ratio = ratio
         (p_this.initial_idxs,
          p_this.initial_mask) = p_this.generate_initial_mask(p_this.scan_method)
 
-        sample = SimulatedSample(simulation_type='training',
-                                 sample_params=p_this,
+        sample = SimulatedSample(sample_params=p_this,
                                  general_params=params_gen,
                                  erd_params=params_erd,
                                  measurement_interface=measurement_interface,
@@ -137,6 +114,7 @@ def generate_training_databases(train_params: TrainingInputParams, save_type='sl
     img_data_all = [tif.imread(f) for f in tif_names]
     rng = np.random.default_rng(train_params.random_seed)
     sim_sample_params = [SimulatedSampleParams(image=img,
+                                               simulation_type='training',
                                                initial_scan_ratio=train_params.initial_scan_ratio,
                                                stop_ratio=train_params.stop_ratio,
                                                scan_method=train_params.scan_method,
@@ -147,7 +125,6 @@ def generate_training_databases(train_params: TrainingInputParams, save_type='sl
     output_dir = Path(train_params.output_dir)
     output_dir.mkdir(exist_ok=True)
     for c_value in tqdm(train_params.test_c_values, leave=True):
-        print(f'Testing for c={c_value:4.3g}')
         results_all = generate_database_per_c(sample_params_all=sim_sample_params,
                                               c_value=c_value,
                                               sampling_type=train_params.sampling_type,
@@ -159,11 +136,10 @@ def generate_training_databases(train_params: TrainingInputParams, save_type='sl
         out_dir_this.mkdir(exist_ok=True)
         save_database_per_c(results_all=results_all,
                             results_dir=out_dir_this,
-                            training_split=0.9,
                             save_type=save_type)
 
 
-def _get_features_and_erds_from_db(db_file_path: Path, save_type: str = 'slads-net-reduced'):
+def get_features_and_erds_from_db(db_file_path: Path, save_type: str = 'slads-net-reduced'):
     with open(db_file_path, 'rb') as f:
         training_db = joblib.load(f)
 
@@ -184,18 +160,45 @@ def _get_features_and_erds_from_db(db_file_path: Path, save_type: str = 'slads-n
     return features_all, erds_all
 
 
+def training_validation_split(features_all: np.ndarray,
+                              erds_all: np.ndarray,
+                              training_split: float = 0.8,
+                              shuffle: bool = True,
+                              random_seed: int = None):
+    rng = np.random.default_rng(random_seed)
+    indices_all = np.arange(features_all.shape[0])
+    if shuffle:
+        rng.shuffle(indices_all)
+
+    features_shuffled = features_all[indices_all]
+    erds_shuffled = erds_all[indices_all]
+
+    train_num = np.ceil(indices_all.size * training_split).astype('int')
+    train_features = features_shuffled[:train_num]
+    train_erds = erds_shuffled[:train_num]
+
+    validation_features = features_shuffled[train_num:]
+    validation_erds = erds_shuffled[train_num:]
+    return train_features, train_erds, validation_features, validation_erds
+
+
 def fit_erd_model(training_db_path: str,
+                  training_split: float = 0.8,
+                  random_seed: int = 111,
                   model_type: str = 'slads-net',
                   model_params: SladsModelParams = None,
                   save_path: str = None,
                   save_type: str = 'slads-net-reduced'):
+    training_db_path = Path(training_db_path)
+    features_all, erds_all = get_features_and_erds_from_db(training_db_path, save_type)
+    [train_features, train_erds,
+     validation_features, validation_erds
+     ] = training_validation_split(features_all, erds_all, training_split, random_seed=random_seed)
     if model_type != 'slads-net':
         raise NotImplementedError
-    training_db_path = Path(training_db_path)
-    features_all, erds_all = _get_features_and_erds_from_db(training_db_path, save_type)
 
     erd_model = SladsSklearnModel(model_params=model_params)
-    erd_model.fit(features_all, erds_all)
+    erd_model.fit(train_features, train_erds)
 
     if save_path is None:
         save_path = training_db_path.parent / 'erd_model.pkl'
@@ -203,11 +206,13 @@ def fit_erd_model(training_db_path: str,
     return erd_model, save_path
 
 
-def validate_erd_model_r_squared(validation_db_path: str,
+def validate_erd_model_r_squared(training_db_path: str,
+                                 training_split: float = 0.8,
                                  erd_model: SladsSklearnModel = None,
                                  erd_model_path: str = None,
                                  model_type: str = 'slads-net',
-                                 save_type: str = 'slads-net-reduced'):
+                                 save_type: str = 'slads-net-reduced',
+                                 random_seed: int = 111):
     assert (erd_model is not None) or (erd_model_path is not None)
 
     if erd_model is None:
@@ -216,9 +221,17 @@ def validate_erd_model_r_squared(validation_db_path: str,
     if model_type != 'slads-net':
         raise NotImplementedError
 
-    features_all, erds_all = _get_features_and_erds_from_db(validation_db_path, save_type)
+    features_all, erds_all = get_features_and_erds_from_db(training_db_path, save_type)
+    [train_features, train_erds,
+     validation_features, validation_erds
+     ] = training_validation_split(features_all, erds_all, training_split, random_seed=random_seed)
 
     if model_type != 'slads-net':
         raise
-    score = erd_model.model.score(features_all, erds_all)
+
+    if training_split < 1:
+        score = erd_model.model.score(validation_features, validation_erds)
+        print("Validation score is", score)
+    else:
+        raise ValueError
     return score

@@ -14,7 +14,7 @@ class NeighborsInfo:
 
 @dt.dataclass
 class MeasurementInfo:
-    measured_idxs: np.ndarray
-    unmeasured_idxs: np.ndarray
-    measured_values: np.ndarray
+    measured_idxs: np.ndarray = dt.field(default_factory=lambda: np.empty((0, 2), dtype='int'))
+    unmeasured_idxs: np.ndarray = dt.field(default_factory=lambda: np.empty((0, 2), dtype='int'))
+    measured_values: np.ndarray = dt.field(default_factory=lambda: np.empty(0, dtype='float32'))
     new_idxs: list = dt.field(default_factory=lambda: [])

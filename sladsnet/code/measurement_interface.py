@@ -1,5 +1,6 @@
 import abc
 from abc import ABC
+
 import numpy as np
 import tifffile as tif
 
@@ -7,7 +8,7 @@ import tifffile as tif
 class MeasurementInterface(ABC):
 
     @abc.abstractmethod
-    def perform_measurement(self):
+    def perform_measurement(self, idxs):
         pass
 
 

@@ -15,6 +15,7 @@ setup(
         "matplotlib",
         "scikit-learn",
         "tqdm",
-        "joblib"
+        "joblib",
+        "tifffile"
     ],
 )

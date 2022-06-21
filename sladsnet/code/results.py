@@ -1,4 +1,6 @@
 import dataclasses as dt
+from pathlib import Path
+
 import joblib
 
 from .base import Sample
@@ -35,4 +37,7 @@ class Result:
         return dt.asdict(self.outputs)
 
     def save(self, path: str):
-        joblib.dump(self.get(), path + '.pkl')
+        path = Path(path)
+        if path.suffix != '.pkl':
+            path = Path(f'{path}.pkl')
+        joblib.dump(self.get(), path)
