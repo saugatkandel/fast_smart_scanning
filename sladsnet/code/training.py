@@ -196,7 +196,7 @@ def fit_erd_model(training_db_path: str,
      ] = training_validation_split(features_all, erds_all, training_split, random_seed=random_seed)
     if model_type != 'slads-net':
         raise NotImplementedError
-
+    model_params = model_params if model_params is not None else SladsModelParams()
     erd_model = SladsSklearnModel(model_params=model_params)
     erd_model.fit(train_features, train_erds)
 

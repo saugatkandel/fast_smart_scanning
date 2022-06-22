@@ -194,8 +194,8 @@ class Sample:
         erd[erd < 0] = 0
         erd = erd * (1 - mask)
         erd = np.nan_to_num(erd, nan=0, posinf=0, neginf=0)
-        if erd.max() != 0:
-            erd = (erd - erd.min()) / (erd.max() - erd.min())
+        #if erd.max() != 0:
+        #    erd = (erd - erd.min()) / (erd.max() - erd.min())
         return erd
 
     def _iterative_find_new_idxs_from_recon(self):

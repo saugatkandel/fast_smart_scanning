@@ -19,8 +19,8 @@ class TrainingInputParams:
     scan_method: str = 'random' # pointwise or line scan
     scan_type: str = 'transmission'
     sampling_type: str = 'fast_limited'
-    num_repeats_per_mask: int = 2
-    measurements_per_initial_mask: int = 50 # Only used if sampling type is fast_limited
+    num_repeats_per_mask: int = 1
+    measurements_per_initial_mask: int = 10 # Only used if sampling type is fast_limited
     random_seed: int = 111
     training_split: float = 0.9
     test_c_values: list = dt.field(default_factory=lambda: [2, 4, 8, 16, 32, 64])
@@ -38,6 +38,7 @@ class SladsModelParams:
     solver: str = 'adam'
     max_iter: int = 500
     alpha: float = 1e-4
+    learning_rate_init: float = 1e-3
 
 
 @dt.dataclass(frozen=True)
@@ -48,9 +49,9 @@ class ERDInputParams:
     static_window_size: int = 15
     dynamic_window_sigma_mult: float = 3
     feat_distance_cutoff: float = 0.25
-    feature_type: str = 'rbf'
+    feature_type: str = 'polynomial'
     calculate_full_erd_per_step: bool = False
-    full_erd_recalculation_frequency: int = 10
+    full_erd_recalculation_frequency: int = 20
     affected_neighbors_window_min: float = 10
     affected_neighbors_window_max: float = 20
     affected_window_increase_factor: float = 1.5
