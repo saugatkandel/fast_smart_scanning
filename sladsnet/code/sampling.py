@@ -8,6 +8,7 @@ from .results import Result
 def run_sampling(sample: Sample, max_iterations: int = np.inf,
                  results: Result = None,
                  results_frequency_percentage: int = 1,
+                 stop_percentage: float = 100,
                  disable_progress_bar: bool = True):
 
     # Indicate that the stopping condition has not yet been met
@@ -49,26 +50,36 @@ def run_sampling(sample: Sample, max_iterations: int = np.inf,
                     results.add(sample)
                     store_at += 1
             else:
+                print('No new scan position found. Stopping scan.')
+                completed_run_flag = True
                 break
-
+            
+            percent_measured = round(sample.ratio_measured * 100, 2)
+            
             # Check stopping criteria
-            completed_run_flag = _check_stopping_criteria(sample, sampling_iters, max_iterations)
+            completed_run_flag = _check_stopping_criteria(sample, sampling_iters, max_iterations, percent_measured, stop_percentage)
 
             # Update the progress bar
-            percent_measured = round(sample.ratio_measured * 100, 2)
+            pbar.set_postfix({'total ERD': sample.ERD.sum()})
             pbar.n = np.clip(percent_measured, 0, stop_ratio * 100)
+            
             pbar.refresh()
         pbar.close()
     return results
 
 
-def _check_stopping_criteria(sample: Sample, current_iter: int, max_iterations: int):
+def _check_stopping_criteria(sample: Sample, current_iter: int, max_iterations: int,  stop_percentage: float):
+    percent_measured = round(sample.ratio_measured * 100, 2)
     if sample.params_sample.scan_method in ['pointwise', 'random']:
         if sample.ratio_measured >= sample.params_sample.stop_ratio:
+            print('Reached the stopping ratio set in the sample parameters. Stopping scan.')
             return True
     if np.sum(sample.ERD) == 0:
+        print('No more improvements expected. Stopping scan.')
         return True
     if current_iter >= max_iterations:
+        print('Reached the maximum iterations for this sampling run. Stopping scan.')
         return True
-
+    if percent_measured > stop_percentage:
+        print('Reached the maximum sampling percentage for this sampling run. Stopping scan.')
     return False

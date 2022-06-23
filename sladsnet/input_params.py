@@ -76,6 +76,7 @@ class SampleParams:
     """Contains information that is held constant throughout the procedure."""
     image_shape: list # tuple containing image shape
     initial_scan_ratio: float = 0.01# initial scan ratio
+    initial_scan_points_num: int = None
     stop_ratio: float = 0.4 # stop ratio
     scan_method: str ='pointwise'# pointwise or random scan
     scan_type: str = 'transmission'
@@ -99,6 +100,13 @@ class SampleParams:
 
         self.image_size = self.image_shape[0] * self.image_shape[1]
         if self.initial_idxs is None:
+            if self.initial_scan_ratio is not None and self.initial_scan_points_num is not None:
+                raise ValueError('Can only supply one of these.')
+            if self.initial_scan_ratio is not None:
+                self.initial_scan_points_num = int(self.initial_scan_ratio * self.image_size)
+            else:
+                self.initial_scan_ratio = self.initial_scan_points_num / self.image_size
+
             self.initial_idxs, self.initial_mask = self.generate_initial_mask(self.scan_method)
         else:
             self.initial_mask = np.zeros(self.image_shape)
@@ -139,11 +147,10 @@ class SampleParams:
         from skopt.space import Space
 
         seed = self.rng.integers(1000)
-
-        num_points = int(self.initial_scan_ratio * self.image_size)
+        
         space = Space([[0, self.image_shape[0] - 1], [0, self.image_shape[1] - 1]])
         sampler = Hammersly()
-        new_idxs = np.array(sampler.generate(space, num_points, random_state=seed))
+        new_idxs = np.array(sampler.generate(space, self.initial_scan_points_num, random_state=seed))
         mask = np.zeros(self.image_shape, dtype='bool')
         mask[new_idxs[:,0], new_idxs[:,1]] = 1
         return new_idxs, mask
@@ -176,6 +183,13 @@ class SampleParams:
 
 
 class SimulatedSampleParams(SampleParams):
+    def __init__(self, image, simulation_type, *args, **kwargs):
+        assert simulation_type in SIMULATION_TYPES
+        self.image = image
+        self.simulation_type = simulation_type
+        super().__init__(image.shape, *args, **kwargs)
+
+class ExperimentSampleParams(SampleParams):
     def __init__(self, image, simulation_type, *args, **kwargs):
         assert simulation_type in SIMULATION_TYPES
         self.image = image
