@@ -24,7 +24,7 @@ def run_sampling(sample: Sample, max_iterations: int = np.inf,
         store_at = 1
 
     # Check stopping criteria, just in case of a bad input
-    completed_run_flag = _check_stopping_criteria(sample, sampling_iters, max_iterations)
+    completed_run_flag = _check_stopping_criteria(sample, sampling_iters, max_iterations, stop_percentage)
 
     # Until the stopping criteria has been met
     with tqdm(total=stop_ratio * 100, desc='% sampled', leave=False, ascii=True, disable=disable_progress_bar) as pbar:
@@ -57,7 +57,7 @@ def run_sampling(sample: Sample, max_iterations: int = np.inf,
             percent_measured = round(sample.ratio_measured * 100, 2)
             
             # Check stopping criteria
-            completed_run_flag = _check_stopping_criteria(sample, sampling_iters, max_iterations, percent_measured, stop_percentage)
+            completed_run_flag = _check_stopping_criteria(sample, sampling_iters, max_iterations, stop_percentage)
 
             # Update the progress bar
             pbar.set_postfix({'total ERD': sample.ERD.sum()})
