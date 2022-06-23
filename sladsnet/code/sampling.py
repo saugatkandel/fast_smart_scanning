@@ -82,4 +82,5 @@ def _check_stopping_criteria(sample: Sample, current_iter: int, max_iterations: 
         return True
     if percent_measured > stop_percentage:
         print('Reached the maximum sampling percentage for this sampling run. Stopping scan.')
+        return True
     return False
