@@ -9,15 +9,14 @@ def run_sampling(sample: Sample, max_iterations: int = np.inf,
                  results: Result = None,
                  results_frequency_percentage: int = 1,
                  disable_progress_bar: bool = True):
+
     # Indicate that the stopping condition has not yet been met
     stop_ratio = sample.params_sample.stop_ratio
     sampling_iters = 0
 
     # Scan initial sets
-    if sample.ratio_measured < sample.params_sample.initial_scan_ratio:
-        sample.perform_measurements(sample.params_sample.initial_idxs)
-        sample.reconstruct_and_compute_erd()
-        sampling_iters += 1
+    if sample.ratio_measured == 0:
+        sample.perform_initial_scan()
 
     if results is not None:
         results.add(sample)

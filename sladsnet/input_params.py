@@ -8,6 +8,7 @@ SUPPORTED_SAMPLING_TYPES = ['slow_detailed', 'fast_limited']
 SCAN_TYPES = ['transmission', 'diffraction']
 GRID_TO_PIXEL_METHODS = ['pixel', 'subpixel']
 SIMULATION_TYPES = ['training', 'emulation', 'visualize_erd']
+SUPPORTED_INITIAL_MASK_TYPES = ['random', 'hammersly']
 
 
 @dt.dataclass(frozen=True)
@@ -15,6 +16,7 @@ class TrainingInputParams:
     input_images_path: str
     output_dir: str
     initial_scan_ratio: float = 0.01 # initial scan ratio
+    initial_mask_type: str = 'random'
     stop_ratio: float = 0.8 # stop ratio
     scan_method: str = 'random' # pointwise or line scan
     scan_type: str = 'transmission'
@@ -25,6 +27,7 @@ class TrainingInputParams:
     training_split: float = 0.9
     test_c_values: list = dt.field(default_factory=lambda: [2, 4, 8, 16, 32, 64])
     calculate_full_erd_per_step: bool = True
+
 
     def __post_init__(self):
         assert self.sampling_type in SUPPORTED_SAMPLING_TYPES
@@ -49,7 +52,7 @@ class ERDInputParams:
     static_window_size: int = 15
     dynamic_window_sigma_mult: float = 3
     feat_distance_cutoff: float = 0.25
-    feature_type: str = 'polynomial'
+    feature_type: str = 'rbf'
     calculate_full_erd_per_step: bool = False
     full_erd_recalculation_frequency: int = 20
     affected_neighbors_window_min: float = 10
@@ -80,24 +83,26 @@ class SampleParams:
     inner_batch_size: int = 1
     random_seed: int = None
     initial_idxs: list = None
+    initial_mask_type: str = 'hammersly'
     initial_mask: np.ndarray = dt.field(init=False)
     line_revisit: bool = False # not in use right now
     rng: np.random.Generator = None
     image_size: int = dt.field(init=False)
 
     def __post_init__(self):
+        assert self.initial_mask_type in SUPPORTED_INITIAL_MASK_TYPES
         if self.rng is not None:
             if self.random_seed is not None:
                 raise ValueError('Cannot supply both rng and random seed.')
         else:
             self.rng = np.random.default_rng(self.random_seed)
+
+        self.image_size = self.image_shape[0] * self.image_shape[1]
         if self.initial_idxs is None:
             self.initial_idxs, self.initial_mask = self.generate_initial_mask(self.scan_method)
         else:
             self.initial_mask = np.zeros(self.image_shape)
             self.initial_mask[self.initial_idxs[:, 0], self.initial_idxs[:, 1]] = 1
-
-        self.image_size = self.image_shape[0] * self.image_shape[1]
 
         if self.scan_type != 'transmission':
             raise NotImplementedError
@@ -112,7 +117,12 @@ class SampleParams:
         if self.scan_method == 'linewise':
             new_idxs, new_mask = self._gen_linewise_scan()
         elif self.scan_method == 'pointwise' or self.scan_method == 'random':
-            new_idxs, new_mask = self._gen_pointwise_scan()
+            if self.initial_mask_type == 'random':
+                new_idxs, new_mask = self._gen_pointwise_scan()
+            elif self.initial_mask_type == 'hammersly':
+                new_idxs, new_mask = self._gen_hammersly_scan()
+            else:
+                raise NotImplementedError
         else:
             raise NotImplementedError
         return new_idxs, new_mask
@@ -122,6 +132,20 @@ class SampleParams:
         mask = self.rng.random(self.image_shape)
         mask = (mask <= self.initial_scan_ratio)
         new_idxs = np.array(np.where(mask)).T
+        return new_idxs, mask
+
+    def _gen_hammersly_scan(self):
+        from skopt.sampler import Hammersly
+        from skopt.space import Space
+
+        seed = self.rng.integers(1000)
+
+        num_points = int(self.initial_scan_ratio * self.image_size)
+        space = Space([[0, self.image_shape[0] - 1], [0, self.image_shape[1] - 1]])
+        sampler = Hammersly()
+        new_idxs = np.array(sampler.generate(space, num_points, random_state=seed))
+        mask = np.zeros(self.image_shape, dtype='bool')
+        mask[new_idxs[:,0], new_idxs[:,1]] = 1
         return new_idxs, mask
 
     def _gen_linewise_scan(self):

@@ -16,6 +16,7 @@ setup(
         "scikit-learn",
         "tqdm",
         "joblib",
-        "tifffile"
+        "tifffile",
+        "scikit-optimize"
     ],
 )

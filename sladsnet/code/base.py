@@ -255,3 +255,8 @@ class Sample:
 
         return np.asarray(new_idxs)
 
+    def perform_initial_scan(self):
+        self.perform_measurements(self.params_sample.initial_idxs)
+        self.reconstruct_and_compute_erd()
+
+

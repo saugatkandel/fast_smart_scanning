@@ -11,6 +11,7 @@ from .measurement_interface import TransmissionSimulationMeasurementInterface
 from .results import Result
 from .sampling import run_sampling
 from .simulation_base import SimulatedSample
+from .utils import renormalize
 from ..input_params import TrainingInputParams, GeneralInputParams, ERDInputParams, SimulatedSampleParams
 
 
@@ -111,7 +112,7 @@ def generate_training_databases(train_params: TrainingInputParams, save_type='sl
     imgs_path = Path(train_params.input_images_path)
     tif_names = imgs_path.glob('*.tif')
 
-    img_data_all = [tif.imread(f) for f in tif_names]
+    img_data_all = [renormalize(tif.imread(f)) for f in tif_names]
     rng = np.random.default_rng(train_params.random_seed)
     sim_sample_params = [SimulatedSampleParams(image=img,
                                                simulation_type='training',
@@ -119,6 +120,7 @@ def generate_training_databases(train_params: TrainingInputParams, save_type='sl
                                                stop_ratio=train_params.stop_ratio,
                                                scan_method=train_params.scan_method,
                                                scan_type=train_params.scan_type,
+                                               initial_mask_type=train_params.initial_mask_type,
                                                rng=rng)
                          for img in img_data_all]
 
