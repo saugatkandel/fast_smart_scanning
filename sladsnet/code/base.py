@@ -8,6 +8,7 @@ from .measurement_interface import MeasurementInterface
 from .neighbors import find_neighbors
 from .recons import compute_recon
 from .slads_features import compute_poly_features
+from .utils import renormalize
 from ..input_params import GeneralInputParams, ERDInputParams, SampleParams
 
 
@@ -28,7 +29,7 @@ class Sample:
         self.mask = np.zeros_like(self.recon_image)
 
         self.measurement_info = MeasurementInfo()
-        self.neighbors = NeighborsInfo([], [], [], [])
+        self.neighbors = NeighborsInfo()
 
         self.RD = np.zeros_like(self.recon_image)
         self.ERD = np.zeros_like(self.RD)
@@ -260,3 +261,25 @@ class Sample:
         self.reconstruct_and_compute_erd()
 
 
+class ExperimentalSample(Sample):
+    """Contains state information about the sample."""
+
+    def perform_measurements(self, new_idxs):
+
+        new_idxs = np.atleast_2d(new_idxs)
+        self.measurement_info.new_idxs = new_idxs
+        self.mask[new_idxs[:, 0], new_idxs[:, 1]] = 1
+
+        # Update which positions have not yet been measured
+        self.measurement_info.measured_idxs = np.concatenate((self.measurement_info.measured_idxs,
+                                                              new_idxs), axis=0)
+        self.measurement_info.unmeasured_idxs = np.transpose(np.where(self.mask == 0))
+
+        new_values_before_norm = self.measurement_interface.perform_measurement(new_idxs)
+        self.measurement_info.unnormalized_values = np.concatenate((self.measurement_info.unnormalized_values, new_values_before_norm))
+
+        #self.measurement_info.measured_values = np.concatenate((self.measurement_info.measured_values, new_values))
+        self.measurement_info.measured_values = renormalize(self.measurement_info.unnormalized_values)
+
+        # Update percentage pixels measured; only when not fromRecon
+        self.ratio_measured = (np.sum(self.mask) / self.params_sample.image_size)

@@ -1,8 +1,8 @@
+from sklearn.neural_network import MLPRegressor as nnr
 import dataclasses as dt
 
 import joblib
 import numpy as np
-from sklearn.neural_network import MLPRegressor as nnr
 
 from ..input_params import SladsModelParams
 

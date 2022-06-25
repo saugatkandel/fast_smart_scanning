@@ -10,6 +10,7 @@ from sladsnet.code.results import Result
 from sladsnet.code.base import Sample
 from sladsnet.code.sampling import run_sampling
 from sladsnet.code.utils import renormalize
+import time
 
 
 C_VALUE = 2
@@ -18,6 +19,7 @@ erd_model = SladsSklearnModel(load_path=train_base_path / f'c_{C_VALUE}/erd_mode
 
 inner_batch_size = 50
 initial_scan_points_num = 2000
+initial_scan_ratio = 0.29
 
 stop_ratio = 0.3
 store_results_percentage = 1
@@ -34,8 +36,8 @@ params_gen = GeneralInputParams()
 
 sample_params = SampleParams(image_shape=(600, 400),
                              inner_batch_size=inner_batch_size,
-                             initial_scan_points_num=initial_scan_points_num,
-                             initial_scan_ratio=None,
+                             #initial_scan_points_num=initial_scan_points_num,
+                             initial_scan_ratio=initial_scan_ratio,
                              stop_ratio=stop_ratio,
                              random_seed=11)
 
@@ -53,5 +55,9 @@ sample = Sample(sample_params=sample_params,
                 erd_model=erd_model)
 results = Result()
 
-run_sampling(sample, results=results, results_frequency_percentage=store_results_percentage, disable_progress_bar=False)
-print("Sucess")
+t1 = time.time()
+run_sampling(sample, results=results, results_frequency_percentage=store_results_percentage, max_iterations=10,
+ disable_progress_bar=False)
+
+t2 = time.time()
+print(f"Time required was {t2-t1:4.3g}")

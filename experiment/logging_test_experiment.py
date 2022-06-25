@@ -1,3 +1,11 @@
+import logging
+  
+level    = logging.INFO
+format   = '%(message)s'
+handlers = [logging.FileHandler('smart_scan.log'), logging.StreamHandler()]
+
+logging.basicConfig(level = level, format = format, handlers = handlers)
+
 from sladsnet.code.erd import SladsSklearnModel
 from sladsnet.code.measurement_interface import ExperimentMeasurementInterface
 from sladsnet.input_params import ERDInputParams, GeneralInputParams, SampleParams
