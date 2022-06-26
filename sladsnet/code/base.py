@@ -252,9 +252,13 @@ class Sample:
                 erd_values = self.ERD[self.measurement_info.unmeasured_idxs[:, 0],
                                       self.measurement_info.unmeasured_idxs[:, 1]]
                 max_k_indices = np.argpartition(erd_values, -inb)[-inb:]
-                new_idxs = self.measurement_info.unmeasured_idxs[max_k_indices]
 
-        return np.asarray(new_idxs)
+                new_idxs = self.measurement_info.unmeasured_idxs[max_k_indices]
+                new_values = self.ERD[new_idxs[:,0], new_idxs[:,1]]
+                sorted_idxs = np.argsort(-new_values)
+                new_idxs_sorted = new_idxs[sorted_idxs]
+
+        return np.asarray(new_idxs_sorted)
 
     def perform_initial_scan(self):
         self.perform_measurements(self.params_sample.initial_idxs)
