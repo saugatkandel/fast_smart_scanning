@@ -29,10 +29,10 @@ import paramiko
 import os
 from pathlib import Path
 
-REMOTE_PATH = Path('/home/sector26/2022R2/20220621/Analysis/') 
-REMOTE_IP = 'ives.cnm.aps.anl.gov'
-REMOTE_USERNAME = 'user26id'
-webhook = "https://argonnedoe.webhook.office.com/webhookb2/9cefafea-fecc-4bec-b5c4-e64645991baf@0cfca185-25f7-49e3-8ae7-704d5326e285/IncomingWebhook/fcc06b19c89046509257aeb282449c36/a263ff95-699b-4d75-a7e1-c7a4d6d5c75f"
+REMOTE_PATH = Path('') 
+REMOTE_IP = ''
+REMOTE_USERNAME = ''
+webhook = ""
 
 #def write_local(fname, array, fmt): 
     #path = self.local_write_path / self._get_current_fname()
