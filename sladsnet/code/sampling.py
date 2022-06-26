@@ -8,8 +8,11 @@ from .results import Result
 def run_sampling(sample: Sample, max_iterations: int = np.inf,
                  results: Result = None,
                  results_frequency_percentage: int = 1,
+                 results_frequency_step: int = 0,
                  stop_percentage: float = 100,
-                 disable_progress_bar: bool = True):
+                 disable_progress_bar: bool = True,
+                 debug: bool = False,
+                 indices_to_actually_measure: int = None):
 
     # Indicate that the stopping condition has not yet been met
     stop_ratio = sample.params_sample.stop_ratio
@@ -39,16 +42,24 @@ def run_sampling(sample: Sample, max_iterations: int = np.inf,
 
             # Find next measurement locations
             new_idxs = sample.find_new_measurement_idxs()
-
+            if indices_to_actually_measure is not None:
+                new_idxs = new_idxs[:indices_to_actually_measure]
             # Perform measurements, reconstructions and ERD/RD computations
             if len(new_idxs) != 0:
                 sample.perform_measurements(new_idxs)
 
                 sample.reconstruct_and_compute_erd()
+                if debug:
+                    print(sample.iteration, sample.ERD.sum())
                 sampling_iters += 1
-                if results is not None and (sample.ratio_measured / results_frequency_percentage * 100 > store_at):
-                    results.add(sample)
-                    store_at += 1
+
+                if results is not None:
+                    if results_frequency_step > 0:
+                        if sampling_iters % results_frequency_step == 0:
+                            results.add(sample)
+                    elif sample.ratio_measured / results_frequency_percentage * 100 > store_at:
+                        results.add(sample)
+                        store_at += 1
             else:
                 print('No new scan position found. Stopping scan.')
                 completed_run_flag = True
