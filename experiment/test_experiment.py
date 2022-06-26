@@ -19,9 +19,9 @@ import paramiko
 import os
 from pathlib import Path
 
-REMOTE_PATH = Path('/home/sector26/2022R2/20220621/Analysis/') 
-REMOTE_IP = 'ives.cnm.aps.anl.gov'
-REMOTE_USERNAME = 'user26id'
+REMOTE_PATH = Path('') 
+REMOTE_IP = ''
+REMOTE_USERNAME = ''
 
 #def write_local(fname, array, fmt): 
     #path = self.local_write_path / self._get_current_fname()
