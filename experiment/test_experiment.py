@@ -1,5 +1,5 @@
 from sladsnet.code.erd import SladsSklearnModel
-from sladsnet.code.measurement_interface import ExperimentMeasurementInterface
+from sladsnet.code.measurement_interface import ExternalMeasurementInterface
 from sladsnet.input_params import ERDInputParams, GeneralInputParams, SampleParams
 from sladsnet.code.results import Result
 from sladsnet.code.base import ExperimentalSample
@@ -257,7 +257,7 @@ if __name__ == '__main__':
                                 stop_ratio=stop_ratio,
                                 random_seed=11)
 
-    measurement_interface = ExperimentMeasurementInterface()#num_initial_idxs= initial_scan_points_num,
+    measurement_interface = ExternalMeasurementInterface()#num_initial_idxs= initial_scan_points_num,
                                                             #store_file_scan_points_num=store_file_scan_points_num,
                                                             #num_iterative_idxs=num_iterative_idxs, 
                                                             #is_initialized=False)

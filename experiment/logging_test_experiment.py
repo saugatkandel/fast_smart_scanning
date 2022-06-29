@@ -10,7 +10,7 @@ handlers = [logging.FileHandler('LOGS/smart_scan_%s.log' %datetime.now().strftim
 logging.basicConfig(level = level, format = format, handlers = handlers)
 
 from sladsnet.code.erd import SladsSklearnModel
-from sladsnet.code.measurement_interface import ExperimentMeasurementInterface
+from sladsnet.code.measurement_interface import ExternalMeasurementInterface
 from sladsnet.input_params import ERDInputParams, GeneralInputParams, SampleParams
 from sladsnet.code.results import Result
 from sladsnet.code.base import ExperimentalSample
@@ -29,10 +29,9 @@ import paramiko
 import os
 from pathlib import Path
 
-REMOTE_PATH = Path('') 
-REMOTE_IP = ''
-REMOTE_USERNAME = ''
-webhook = ""
+REMOTE_PATH = Path('/home/sector26/2022R2/20220621/Analysis/') 
+REMOTE_IP = 'ives.cnm.aps.anl.gov'
+REMOTE_USERNAME = 'user26id'
 
 #def write_local(fname, array, fmt): 
     #path = self.local_write_path / self._get_current_fname()
@@ -76,11 +75,12 @@ class MainWindow:
         self.current_file_suffix = 1
         self.current_file_position = 0
 
-        self.attoz0 = 1102
-        self.samy0 = -3332
-        self.scan_stepsize = 3
-        self.scan_centerx = 100
-        self.scan_centery = 150
+        self.attoz0 = -21.347
+        self.samy0 = -627.676
+        self.xfactor = 0.366
+        self.scan_stepsize = 0.1
+        self.scan_centerx = 200
+        self.scan_centery = 40
 
         self.checkpoint_skipped = 0
 
@@ -106,7 +106,7 @@ class MainWindow:
             if self.debug:
                 logging.info(datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + ' Delay between monitor updates is %.3f s.' %time_diff)
             if time_diff < 20:
-                requests.post(webhook, json={"text":"{0}: AGX : Delay between trigger times was less than 20s. Ignoring the trigger.".format(datetime.now())})
+            #    requests.post(webhook, json={"text":"{0}: AGX : Delay between trigger times was less than 20s. Ignoring the trigger.".format(datetime.now())})
                 #logging.info("WARNING: Delay between trigger times was less than 20s. Ignoring the trigger.")
                 return
 
@@ -130,8 +130,10 @@ class MainWindow:
             
             mda = readMDA('mda_current.mda', verbose=False)
             data = np.array(mda[1].d[3].data)
-            xx = np.round((np.array(mda[1].d[32].data)-self.attoz0)/self.scan_stepsize,0) +self.scan_centerx
-            yy = np.round((np.array(mda[1].d[31].data)-self.samy0)/self.scan_stepsize,0) +self.scan_centery
+            # 32 for attoz
+            xx = np.round((np.array(mda[1].d[35].data)-self.attoz0)/self.scan_stepsize/self.xfactor,0) +self.scan_centerx
+            # 31 for samy
+            yy = np.round((np.array(mda[1].d[36].data)-self.samy0)/self.scan_stepsize,0) +self.scan_centery
             curr_pt = mda[1].curr_pt
             points_of_interest = curr_pt % 50
             if points_of_interest == 0:
@@ -146,19 +148,20 @@ class MainWindow:
                     "data shape is", mda[1].curr_pt, ", but the expected shape is", expected_shape)
             if curr_pt > expected_shape + 30:
                 #logging.info(datetime.now().strftime("%m/%d/%Y, %H:%M:%S")  + "WARNING: Possible epics communication error.")
-                requests.post(webhook, json={"text":"{0}: AGX : Possible epics communication error.".format(datetime.now())})
+                #requests.post(webhook, json={"text":"{0}: AGX : Possible epics communication error.".format(datetime.now())})
                 self.current_file_position += 1
                 self.checkpoint_skipped = 1
                 points_of_interest += 50
 
-
             #route = np.load('route.npz')
-            xpoints = xx[-points_of_interest:-1]
-            ypoints = yy[-points_of_interest:-1]
+            xpoints = xx[curr_pt-points_of_interest:curr_pt-1]
+            ypoints = yy[curr_pt-points_of_interest:curr_pt-1]
             route_idxs = np.array((ypoints, xpoints), dtype='int').T
             #route_shape = np.shape(route_idxs)[0]
 
-            new_intensities = data[-points_of_interest + 1:]
+            new_intensities = data[curr_pt-points_of_interest+1:curr_pt]
+            #print(new_intensities.min(), new_intensities.mean(), data[curr_pt])
+            #print(xpoints, xpoints.mean(), xx[curr_pt])
 
             if np.shape(route_idxs)[0] != np.shape(new_intensities)[0]:
                 logging.info(datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + ' Mismatch between shapes of route %d and ' %xpoints.shape[0] + 'and intensities %d.' %(np.shape(new_intensities)[0]) )
@@ -169,7 +172,7 @@ class MainWindow:
 
             if curr_pt == self.store_file_scan_points_num:
                 if self.completed_run_flag :
-                    requests.post(webhook, json={"text":"{0}: AGX : Done!".format(datetime.now())})
+                    #requests.post(webhook, json={"text":"{0}: AGX : Done!".format(datetime.now())})
                     sys.exit()
                 self.current_file_suffix += 1
                 self.new_idxs_to_write = np.empty((0, 2), dtype='int')
@@ -213,7 +216,9 @@ class MainWindow:
 
         recon_local_fname = 'recon.npy'
         np.save(recon_local_fname, self.sample.recon_image)
-        self.sftp_put(recon_local_fname, str(REMOTE_PATH / 'recon_latest.npy'))
+        
+        percent_measured = self.sample.ratio_measured 
+        logging.info(datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + ' Surface covered: %.3f' %(percent_measured))
 
         #recon_remote_fname1 = 'recon_%03d.npy' %self.current_file_suffix
         #self.sftp_put(recon_local_fname, str(REMOTE_PATH / recon_remote_fname1))
@@ -230,6 +235,7 @@ class MainWindow:
             logging.info(datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + ' No new scan position found. Stopping scan.')
             self.completed_run_flag = True
         t2 = time.time()
+        self.sftp_put(recon_local_fname, str(REMOTE_PATH / 'recon_latest.npy'))
         logging.info(datetime.now().strftime("%m/%d/%Y, %H:%M:%S") + ' Sent new smart scan positions (time elapsed) %.3f s.\n' %(t2-t1))
         
         #if completed_run_flag:
@@ -274,10 +280,10 @@ if __name__ == '__main__':
     erd_model = SladsSklearnModel(load_path=train_base_path / f'c_{C_VALUE}/erd_model_relu.pkl')
 
     inner_batch_size = 100
-    store_file_scan_points_num = 500
+    store_file_scan_points_num = 2000
     num_iterative_idxs = inner_batch_size
 
-    stop_ratio = 0.3
+    stop_ratio = 0.65
     store_results_percentage = 1
 
     affected_neighbors_window_min = 5
@@ -308,13 +314,13 @@ if __name__ == '__main__':
         initial_idxs = np.concatenate((initial_idxs, idxs_this), axis=0)
         initial_intensities = np.concatenate((initial_intensities, intensities))
     
-    sample_params = SampleParams(image_shape=(300, 200),
+    sample_params = SampleParams(image_shape=(80, 400),
                                 inner_batch_size=inner_batch_size,
                                 initial_idxs=initial_idxs,
                                 stop_ratio=stop_ratio,
                                 random_seed=11)
 
-    measurement_interface = ExperimentMeasurementInterface()#num_initial_idxs= initial_scan_points_num,
+    measurement_interface = ExternalMeasurementInterface()#num_initial_idxs= initial_scan_points_num,
                                                             #store_file_scan_points_num=store_file_scan_points_num,
                                                             #num_iterative_idxs=num_iterative_idxs, 
                                                             #is_initialized=False)

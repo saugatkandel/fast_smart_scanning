@@ -11,7 +11,7 @@ from .measurement_interface import TransmissionSimulationMeasurementInterface
 from .results import Result
 from .sampling import run_sampling
 from .simulation_base import SimulatedSample
-from .utils import renormalize
+from sladsnet.utils.utils import renormalize
 from ..input_params import TrainingInputParams, GeneralInputParams, ERDInputParams, SimulatedSampleParams
 
 

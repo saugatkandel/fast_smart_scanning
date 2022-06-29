@@ -1,15 +1,12 @@
-
-
-import numpy as np
 from pathlib import Path
 
 from sladsnet.input_params import ERDInputParams, GeneralInputParams, SampleParams
-from sladsnet.code.measurement_interface import TransmissionSimulationMeasurementInterface#ExperimentMeasurementInterface
+from sladsnet.code.measurement_interface import TransmissionSimulationMeasurementInterface#ExternalMeasurementInterface
 from sladsnet.code.erd import SladsSklearnModel
 from sladsnet.code.results import Result
 from sladsnet.code.base import Sample
 from sladsnet.code.sampling import run_sampling
-from sladsnet.code.utils import renormalize
+from sladsnet.utils.utils import renormalize
 import time
 
 
@@ -42,7 +39,7 @@ sample_params = SampleParams(image_shape=(600, 400),
                              random_seed=11)
 
 
-#interface = ExperimentMeasurementInterface('instructions.csv', num_initial_idxs= 2000)
+#interface = ExternalMeasurementInterface('instructions.csv', num_initial_idxs= 2000)
 #interface.perform_measurement(sample_params.initial_idxs)
 img_path = Path.cwd().parent /'work_directory/analyze_s26_scans/norm_xrm.tif'
 image = renormalize(image_path=img_path)

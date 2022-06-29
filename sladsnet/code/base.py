@@ -8,7 +8,7 @@ from .measurement_interface import MeasurementInterface
 from .neighbors import find_neighbors
 from .recons import compute_recon
 from .slads_features import compute_poly_features
-from .utils import renormalize
+from sladsnet.utils.renormalize import renormalize
 from ..input_params import GeneralInputParams, ERDInputParams, SampleParams
 
 
@@ -284,6 +284,7 @@ class ExperimentalSample(Sample):
 
         #self.measurement_info.measured_values = np.concatenate((self.measurement_info.measured_values, new_values))
         self.measurement_info.measured_values = renormalize(self.measurement_info.unnormalized_values)
-
+        #self.measurement_info.measured_values = self.measurement_info.unnormalized_values
+        
         # Update percentage pixels measured; only when not fromRecon
         self.ratio_measured = (np.sum(self.mask) / self.params_sample.image_size)
