@@ -10,7 +10,9 @@ def setup_logging(out_dir: str = 'LOGS',
     ch = logging.StreamHandler()
     ch.setFormatter(formatter)
 
+    out_dir = Path(f'{out_dir}')
+    out_dir.mkdir(exist_ok=True)
     dt = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-    fh = logging.FileHandler(Path(f'{out_dir}/{out_prefix}_{dt}'))
+    fh = logging.FileHandler(out_dir / f'{out_prefix}_{dt}.log')
     fh.setFormatter(formatter)
-    logging.basicConfig(handlers=[ch, fh], format=formatter, level=level)
+    logging.basicConfig(handlers=[ch, fh], level=level)#formatter=formatter, level=level)
