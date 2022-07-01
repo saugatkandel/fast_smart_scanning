@@ -8,16 +8,15 @@
 #
 import fnmatch
 import logging
-import shutil
 from pathlib import Path
-
-import numpy as np
-from paramiko import SFTPClient
 
 from sladsnet.code.base import ExperimentalSample
 from sladsnet.code.erd import SladsSklearnModel
 from sladsnet.code.measurement_interface import ExternalMeasurementInterface
 from sladsnet.input_params import ERDInputParams, GeneralInputParams, SampleParams
+
+import numpy as np
+from paramiko import SFTPClient
 
 
 def load_idxs_and_intensities(data_dir: str):
@@ -49,36 +48,44 @@ def clean_data_directory(data_dir: str):
     """This is dangerous. Use with care."""
     dpath = Path(data_dir)
     if dpath.exists():
-        logging.warning('Removing the files currently present in %s.' % data_dir)
-        shutil.rmtree(data_dir)
-    dpath.mkdir()
+        logging.warning('Removing the npz files currently present in %s.' % data_dir)
+    
+        npz_files = dpath.glob('*.npz')
+        for npz in npz_files:
+            npz.unlink()
+    else:
+        dpath.mkdir()
 
 
 def get_wildcard_files_remote(sftp: SFTPClient, remote_dir: str, search: str):
     matching_filenames = []
+    remote_dir = str(remote_dir)
+    logging.info('Getting files from %s'%remote_dir)
     for filename in sftp.listdir(remote_dir):
         if fnmatch.fnmatch(filename, search):
-            matching_filenames.append(filename)
+            matching_filenames.append(str(Path(remote_dir) / filename))
     return matching_filenames
 
 
 def get_init_npzs_from_remote(sftp: SFTPClient, remote_dir: str, data_dir: str):
     init_npzs = get_wildcard_files_remote(sftp, remote_dir, 'init*.npz')
     for f in init_npzs:
-        sftp.get(f, data_dir)
+        local_fname = str(Path(data_dir) / Path(f).name)
+        logging.info('Copying %s to %s'%(f, local_fname))
+        sftp.get(f, local_fname)
 
 
 def create_experiment_sample(numx: int, numy: int,
                              initial_idxs: list,
                              inner_batch_size: int = 100,
                              stop_ratio: float = 0.35,
-                             c_value: float = 2.0,
+                             c_value: int = 2,
                              full_erd_recalculation_frequency: int = 1,
                              affected_neighbors_window_min: int = 5,
                              affected_neighbors_window_max: int = 15,
                              erd_model_file_path: str = None):
     if erd_model_file_path is None:
-        erd_model_file_path = Path(__file__).parent.parent / 'ResultsAndData/TrainingData/cameraman/' \
+        erd_model_file_path = Path(__file__).parent.parent.parent / 'ResultsAndData/TrainingData/cameraman/' \
                               / f'c_{c_value}/erd_model_relu.pkl'
     erd_model = SladsSklearnModel(load_path=erd_model_file_path)
 
