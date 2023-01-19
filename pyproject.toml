@@ -9,16 +9,20 @@ authors = [
 ]
 description = "Fast Autonomous Scanning Toolkit"
 readme = "README.md"
-requires-python = ">=3.7"
+license = {file = "LICENSE.txt"}
+requires-python = "~=3.10"
 dependencies = [
     "numpy<1.24",
     "scipy",
-    "matplotlib",
+    "scikit-optimize",
     "scikit-learn",
-    "tqdm",
+    "scikit-image",
     "joblib",
+    "matplotlib",
+    "tqdm",
     "tifffile",
-    "scikit-optimize"
+    "jupyter",
+    "ipywidgets"
 ]
 version = "0.0.2"
 
