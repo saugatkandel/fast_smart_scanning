@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fast_scan"
+authors = [
+    {name = "Saugat Kandel"},
+]
+description = "Fast Autonomous Scanning Toolkit"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "numpy<1.24",
+    "scipy",
+    "matplotlib",
+    "scikit-learn",
+    "tqdm",
+    "joblib",
+    "tifffile",
+    "scikit-optimize"
+]
+version = "0.0.2"
+
+
+[tool.setuptools.packages]
+find = {}  # Scan the project directory with the default parameters
+
+[project.optional-dependencies]
+beamline = [
+    "pyepics",
+    "paramiko",
+    "tk"
+]

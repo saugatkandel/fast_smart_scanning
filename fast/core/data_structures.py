@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 # ----------------------------------------------------------------------- #
 # Copyright (c) 2023, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
@@ -16,7 +17,7 @@
 # or without modification, are permitted provided that the following      #
 # conditions are met:                                                     #
 #                                                                         #
-#     * Redistributions of source code must retain the above copyright    #
+#     * Redistributions of source core must retain the above copyright    #
 #       notice, this list of conditions and the following disclaimer.     #
 #                                                                         #
 #     * Redistributions in binary form must reproduce the above copyright #
@@ -42,3 +43,31 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         #
 # POSSIBILITY OF SUCH DAMAGE.                                             #
 # ----------------------------------------------------------------------- #
+import dataclasses as dt
+
+import numpy as np
+
+
+@dt.dataclass
+class NeighborsInfo:
+    indices: list = dt.field(default_factory=lambda: [])
+    distances: list = dt.field(default_factory=lambda: [])
+    weights: list = dt.field(default_factory=lambda: [])
+    values: list = dt.field(default_factory=lambda: [])
+
+
+@dt.dataclass
+class MeasurementInfo:
+    measured_idxs: np.ndarray = dt.field(
+        default_factory=lambda: np.empty((0, 2), dtype="int")
+    )
+    unmeasured_idxs: np.ndarray = dt.field(
+        default_factory=lambda: np.empty((0, 2), dtype="int")
+    )
+    measured_values: np.ndarray = dt.field(
+        default_factory=lambda: np.empty(0, dtype="float32")
+    )
+    unnormalized_values: np.ndarray = dt.field(
+        default_factory=lambda: np.empty(0, dtype="float32")
+    )
+    new_idxs: list = dt.field(default_factory=lambda: [])
