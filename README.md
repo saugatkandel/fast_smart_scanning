@@ -27,30 +27,40 @@ Examples for training and numerical simulation using the FAST code are located i
 Specifically:
 
 - `work_directory/training/training_cameraman.ipynb` contains the code used for training the NN using the cameraman image. While this jupyter notebook shows the procedure used to optimize the SLADS hyperparameter $c$, only the optimal model (corresponding to $c=2$) is stored in this repository. The training data is regenerated within this notebook.
-- `work_directory/test/simulate_fast.ipynb` contains the code for the FAST results in the numerical simulated presented in the manuscript. 
-- The files `work_directory/test/simulate_full.ipynb` `work_directory/test/comparisons_full.ipynb`and respectively contain the full simulation code --- including the raster grid and random sampling simulations --- and the analysis code used in the manuscript. This can be fairly computationally expensive and require a large amount of memory and storage.
+- `work_directory/other_examples/simulate_generic_image.ipynb` contains a simulation for a generic coffee cup image. 
+- `work_directory/sims_paper/simulate_fast.ipynb` contains the code for the FAST results in the numerical simulated presented in the manuscript. 
+- The files `work_directory/sims_paper/simulate_full.ipynb`and  `work_directory/test/comparisons_full.ipynb`respectively contain the full simulation code --- including the raster grid and random sampling simulations --- and the analysis code used in the manuscript. This can be fairly computationally expensive and require a large amount of memory and storage.
 
 ### Installation
 
 We recommend creating a new environment (through conda, pipenv, etc) to try out FAST. The conda command might look like:
-```commandline
+```shell
 conda create -n fast_test python=3.10
 conda activate fast_test
-conda config --prepend channels conda-forge
+conda config --prepend channels conda-forges
 conda install pip
 ```
 We recommend using Python 3.10 because PyPi does not currently contain a scikit-image wheel for Python 3.11 in Macs with the M1 processor. One alternative is to install scikit-image through conda instead. We have not tried the current version of the code in other operating systems, but we do not expect any issues.
 
 The next step would be to download the code (and unzip it if necessary) to the desired location.  Then, enter the directory and run:
-```commandline
+```shell
 pip install .
 ```
 or, if we want an "editable" installation where one can modify the source code and continue using the package without any reinstall. 
-```commandline
+```shell
 pip install -e .
 ```
 This should install all the dependencies required for the project. Optionally, expert users can install the requirements listed in the `pyproject.toml` file directly from conda or elsewhere.
 
+Jupyter notebook or jupyter lab is also required to run the `ipynb` notebooks supplied as examples. To install jupyter lab:
+```shell
+conda install jupyterlab
+```
+To run jupyterlab
+```shell
+jupyter lab
+```
+Then navigate to the appropriate notebook.
 ### Use
 
 The jupyter notebooks in `work_directory` contain the example codes. To use the API within a python script, 
