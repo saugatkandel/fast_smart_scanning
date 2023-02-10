@@ -1,48 +1,43 @@
-#!/usr/bin/env python
 # ----------------------------------------------------------------------- #
 # Copyright (c) 2023, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
-# Copyright 2021. UChicago Argonne, LLC. This software was produced       #
-# under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
-# Laboratory (ANL), which is operated by UChicago Argonne, LLC for the    #
-# U.S. Department of Energy. The U.S. Government has rights to use,       #
-# reproduce, and distribute this software.  NEITHER THE GOVERNMENT NOR    #
-# UChicago Argonne, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR        #
-# ASSUMES ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is     #
-# modified to produce derivative works, such modified software should     #
-# be clearly marked, so as not to confuse it with the version available   #
-# from ANL.                                                               #
+# Software Name:    Fast Autonomous Scanning Toolkit (FAST)               #
+# By: Argonne National Laboratory                                         #
+# OPEN SOURCE LICENSE                                                     #
 #                                                                         #
-# Additionally, redistribution and use in source and binary forms, with   #
-# or without modification, are permitted provided that the following      #
-# conditions are met:                                                     #
+# Redistribution and use in source and binary forms, with or without      #
+# modification, are permitted provided that the following conditions      #
+# are met:                                                                #
 #                                                                         #
-#     * Redistributions of source code must retain the above copyright    #
-#       notice, this list of conditions and the following disclaimer.     #
+# 1. Redistributions of source code must retain the above copyright       #
+#    notice, this list of conditions and the following disclaimer.        #
 #                                                                         #
-#     * Redistributions in binary form must reproduce the above copyright #
-#       notice, this list of conditions and the following disclaimer in   #
-#       the documentation and/or other materials provided with the        #
-#       distribution.                                                     #
+# 2. Redistributions in binary form must reproduce the above copyright    #
+#    notice, this list of conditions and the following disclaimer in      #
+#    the documentation and/or other materials provided with the           #
+#    distribution.                                                        #
 #                                                                         #
-#     * Neither the name of UChicago Argonne, LLC, Argonne National       #
-#       Laboratory, ANL, the U.S. Government, nor the names of its        #
-#       contributors may be used to endorse or promote products derived   #
-#       from this software without specific prior written permission.     #
+# 3. Neither the name of the copyright holder nor the names of its        #
+#    contributors may be used to endorse or promote products derived from #
+#    this software without specific prior written permission.             #
 #                                                                         #
-# THIS SOFTWARE IS PROVIDED BY UChicago Argonne, LLC AND CONTRIBUTORS     #
+# *********************************************************************** #
+#                                                                         #
+# DISCLAIMER                                                              #
+#                                                                         #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS     #
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT       #
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS       #
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL UChicago     #
-# Argonne, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,        #
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE          #
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,    #
 # INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,    #
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;        #
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER        #
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT      #
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN       #
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         #
-# POSSIBILITY OF SUCH DAMAGE.                                             #
-# ----------------------------------------------------------------------- #
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS   #
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED      #
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,  #
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF   #
+# THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY            #
+# OF SUCH DAMAGE.                                                         #
+# *********************************************************************** #
 # version 4 Tim Mooney 8/22/02
 # adapted for python3 + remove tkinter support : TZ 03/13/19
 
@@ -322,10 +317,7 @@ def readScan(file, v, new=0):
     u = Unpacker(buf)
     for j in range(scan.np):
         if v:
-            print(
-                "read %d pts for pos. %d at buf loc %x"
-                % (scan.npts, j, u.get_position())
-            )
+            print("read %d pts for pos. %d at buf loc %x" % (scan.npts, j, u.get_position()))
         scan.p[j].data = u.unpack_farray(scan.npts, u.unpack_double)
         if v:
             print("scan.p[%d].data = %s" % (j, repr(scan.p[j].data)))
@@ -544,10 +536,7 @@ def readMDA(fname=None, maxdim=2, verbose=1, help=0, new=0):
     dim.append(dict)
     dim.reverse()
     if verbose:
-        print(
-            "%s is a %d-D file; %d dimensions read in."
-            % (fname, dim[0]["rank"], len(dim) - 1)
-        )
+        print("%s is a %d-D file; %d dimensions read in." % (fname, dim[0]["rank"], len(dim) - 1))
         print("dim[0] = dictionary of %d scan-environment PVs" % (len(dim[0])))
         print("   usage: dim[0]['sampleEntry'] ->", dim[0]["sampleEntry"])
         for i in range(1, len(dim)):
@@ -558,40 +547,20 @@ def readMDA(fname=None, maxdim=2, verbose=1, help=0, new=0):
     if help:
         print(" ")
         print("   each dimension (e.g., dim[1]) has the following fields: ")
-        print(
-            "      time      - date & time at which scan was started: %s"
-            % (dim[1].time)
-        )
-        print(
-            "      scan_name - name of scan record that acquired this dimension: '%s'"
-            % (dim[1].scan_name)
-        )
-        print(
-            "      curr_pt   - number of data points actually acquired: %d"
-            % (dim[1].curr_pt)
-        )
+        print("      time      - date & time at which scan was started: %s" % (dim[1].time))
+        print("      scan_name - name of scan record that acquired this dimension: '%s'" % (dim[1].scan_name))
+        print("      curr_pt   - number of data points actually acquired: %d" % (dim[1].curr_pt))
         print("      npts      - number of data points requested: %d" % (dim[1].npts))
-        print(
-            "      nd        - number of detectors for this scan dimension: %d"
-            % (dim[1].nd)
-        )
+        print("      nd        - number of detectors for this scan dimension: %d" % (dim[1].nd))
         print("      d[]       - list of detector-data structures")
-        print(
-            "      np        - number of positioners for this scan dimension: %d"
-            % (dim[1].np)
-        )
+        print("      np        - number of positioners for this scan dimension: %d" % (dim[1].np))
         print("      p[]       - list of positioner-data structures")
-        print(
-            "      nt        - number of detector triggers for this scan dimension: %d"
-            % (dim[1].nt)
-        )
+        print("      nt        - number of detector triggers for this scan dimension: %d" % (dim[1].nt))
         print("      t[]       - list of trigger-info structures")
 
     if help:
         print(" ")
-        print(
-            "   each detector-data structure (e.g., dim[1].d[0]) has the following fields: "
-        )
+        print("   each detector-data structure (e.g., dim[1].d[0]) has the following fields: ")
         print("      desc      - description of this detector")
         print("      data      - data list")
         print("      unit      - engineering units associated with this detector")
@@ -599,9 +568,7 @@ def readMDA(fname=None, maxdim=2, verbose=1, help=0, new=0):
 
     if help:
         print(" ")
-        print(
-            "   each positioner-data structure (e.g., dim[1].p[0]) has the following fields: "
-        )
+        print("   each positioner-data structure (e.g., dim[1].p[0]) has the following fields: ")
         print("      desc          - description of this positioner")
         print("      data          - data list")
         print("      step_mode     - scan mode (e.g., Linear, Table, On-The-Fly)")
@@ -746,9 +713,7 @@ def writeMDA(dim, fname=None):
         if rank > 2:  # 3D scan
             for i in range(m.scan.npts):
                 p.reset()
-                p.pack_farray(
-                    m.scan.inner[i].npts, m.scan.inner[i].pLowerScans, p.pack_int
-                )
+                p.pack_farray(m.scan.inner[i].npts, m.scan.inner[i].pLowerScans, p.pack_int)
                 m.scan.inner[i].pLowerScansBuf = p.get_buffer()
                 if rank > 3:  # 4D scan
                     for j in range(m.scan.inner[i].npts):

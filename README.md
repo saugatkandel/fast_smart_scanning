@@ -40,7 +40,7 @@ conda activate fast_test
 conda config --prepend channels conda-forge
 conda install pip
 ```
-We recommend using Python 3.10 because PyPi does not currently contain a scikit-image wheel for Python 3.11 in Macs with the M1 processor. One alternative is to install scikit-image through conda instead. We have not tried the current version of the code in other operating systems, but we do not expect any issues.
+We recommend using Python 3.10 because PyPi does not currently contain a scikit-image wheel for Python 3.11 for M1 Macs. One alternative is to install scikit-image through conda instead. We have not tried the current version of the code in other operating systems, but we do not expect any issues.
 
 The next step would be to download the code (and unzip it if necessary) to the desired location.  Then, enter the directory and run:
 ```shell
@@ -61,6 +61,7 @@ To run jupyterlab
 jupyter lab
 ```
 Then navigate to the appropriate notebook.
+
 ### Use
 
 The jupyter notebooks in `work_directory` contain the example codes. To use the API within a python script, 

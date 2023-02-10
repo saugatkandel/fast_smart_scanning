@@ -1,47 +1,43 @@
 # ----------------------------------------------------------------------- #
 # Copyright (c) 2023, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
-# Copyright 2021. UChicago Argonne, LLC. This software was produced       #
-# under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
-# Laboratory (ANL), which is operated by UChicago Argonne, LLC for the    #
-# U.S. Department of Energy. The U.S. Government has rights to use,       #
-# reproduce, and distribute this software.  NEITHER THE GOVERNMENT NOR    #
-# UChicago Argonne, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR        #
-# ASSUMES ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is     #
-# modified to produce derivative works, such modified software should     #
-# be clearly marked, so as not to confuse it with the version available   #
-# from ANL.                                                               #
+# Software Name:    Fast Autonomous Scanning Toolkit (FAST)               #
+# By: Argonne National Laboratory                                         #
+# OPEN SOURCE LICENSE                                                     #
 #                                                                         #
-# Additionally, redistribution and use in source and binary forms, with   #
-# or without modification, are permitted provided that the following      #
-# conditions are met:                                                     #
+# Redistribution and use in source and binary forms, with or without      #
+# modification, are permitted provided that the following conditions      #
+# are met:                                                                #
 #                                                                         #
-#     * Redistributions of source core must retain the above copyright    #
-#       notice, this list of conditions and the following disclaimer.     #
+# 1. Redistributions of source code must retain the above copyright       #
+#    notice, this list of conditions and the following disclaimer.        #
 #                                                                         #
-#     * Redistributions in binary form must reproduce the above copyright #
-#       notice, this list of conditions and the following disclaimer in   #
-#       the documentation and/or other materials provided with the        #
-#       distribution.                                                     #
+# 2. Redistributions in binary form must reproduce the above copyright    #
+#    notice, this list of conditions and the following disclaimer in      #
+#    the documentation and/or other materials provided with the           #
+#    distribution.                                                        #
 #                                                                         #
-#     * Neither the name of UChicago Argonne, LLC, Argonne National       #
-#       Laboratory, ANL, the U.S. Government, nor the names of its        #
-#       contributors may be used to endorse or promote products derived   #
-#       from this software without specific prior written permission.     #
+# 3. Neither the name of the copyright holder nor the names of its        #
+#    contributors may be used to endorse or promote products derived from #
+#    this software without specific prior written permission.             #
 #                                                                         #
-# THIS SOFTWARE IS PROVIDED BY UChicago Argonne, LLC AND CONTRIBUTORS     #
+# *********************************************************************** #
+#                                                                         #
+# DISCLAIMER                                                              #
+#                                                                         #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS     #
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT       #
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS       #
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL UChicago     #
-# Argonne, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,        #
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE          #
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,    #
 # INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,    #
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;        #
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER        #
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT      #
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN       #
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         #
-# POSSIBILITY OF SUCH DAMAGE.                                             #
-# ----------------------------------------------------------------------- #
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS   #
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED      #
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,  #
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF   #
+# THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY            #
+# OF SUCH DAMAGE.                                                         #
+# *********************************************************************** #
 import copy
 from pathlib import Path
 
@@ -86,15 +82,11 @@ def generate_database_per_c(
         leave=False,
         ascii=True,
     ):
-        for mask_num in tqdm(
-            range(0, num_repeats_per_mask), desc="Masks", leave=False, ascii=True
-        ):
+        for mask_num in tqdm(range(0, num_repeats_per_mask), desc="Masks", leave=False, ascii=True):
             # Make a copy of the sample
             sample_params = copy.deepcopy(sample_params_all[index])
             sample_params.rng = sample_params_all[index].rng
-            measurement_interface = TransmissionSimulationMeasurementInterface(
-                sample_params.image
-            )
+            measurement_interface = TransmissionSimulationMeasurementInterface(sample_params.image)
 
             if sampling_type == "slow_detailed":
                 _emulate_experimental_sampling(
@@ -116,9 +108,7 @@ def generate_database_per_c(
     return results_all
 
 
-def save_database_per_c(
-    results_all: Result, results_dir: str, save_type: str = "slads-net-reduced"
-):
+def save_database_per_c(results_all: Result, results_dir: str, save_type: str = "slads-net-reduced"):
     assert save_type in inp.SUPPORTED_SAVE_DATABASE_TYPES
     results_dir = Path(results_dir)
 
@@ -143,9 +133,7 @@ def save_database_per_c(
     return training_database
 
 
-def _emulate_experimental_sampling(
-    sample_params, measurement_interface, params_erd, params_gen, results
-):
+def _emulate_experimental_sampling(sample_params, measurement_interface, params_erd, params_gen, results):
     """Find new measurement position like in the experimental sampling runs"""
     (
         sample_params.initial_idxs,
@@ -176,14 +164,10 @@ def _run_fast_limited_sampling(
     rand_dist = sample_params.rng.random(measurements_per_initial_mask)
     test_ratios = np.sort((stop_ratio - start_ratio) * rand_dist + start_ratio)
 
-    for ratio in tqdm(
-        test_ratios, leave=False, desc="Iterating through test sampling ratios."
-    ):
+    for ratio in tqdm(test_ratios, leave=False, desc="Iterating through test sampling ratios."):
         p_this = copy.deepcopy(sample_params)
         p_this.initial_scan_ratio = ratio
-        (p_this.initial_idxs, p_this.initial_mask) = p_this.generate_initial_mask(
-            p_this.scan_method
-        )
+        (p_this.initial_idxs, p_this.initial_mask) = p_this.generate_initial_mask(p_this.scan_method)
 
         sample = SimulatedSample(
             sample_params=p_this,
@@ -241,9 +225,7 @@ def generate_training_databases(train_params: inp.TrainingInputParams):
     return results_all
 
 
-def get_features_and_erds_from_db(
-    db_file_path: Path, save_type: str = "slads-net-reduced"
-):
+def get_features_and_erds_from_db(db_file_path: Path, save_type: str = "slads-net-reduced"):
     with open(db_file_path, "rb") as f:
         training_db = joblib.load(f)
 
@@ -311,17 +293,13 @@ def fit_erd_model(
             f"Ensure that the same random seed is used for both this training function and the validation function."
         )
         full_features_erds_db_path = Path(full_features_erds_db_path)
-        features_all, erds_all = get_features_and_erds_from_db(
-            full_features_erds_db_path, save_type
-        )
+        features_all, erds_all = get_features_and_erds_from_db(full_features_erds_db_path, save_type)
         [
             train_features,
             train_erds,
             validation_features,
             validation_erds,
-        ] = training_validation_split(
-            features_all, erds_all, training_split, random_seed=random_seed
-        )
+        ] = training_validation_split(features_all, erds_all, training_split, random_seed=random_seed)
 
     if model_type != "slads-net":
         raise NotImplementedError
@@ -366,17 +344,13 @@ def validate_erd_model_r_squared(
             f"Ensure that the same random seed is used for both this training function and the validation function."
         )
 
-        features_all, erds_all = get_features_and_erds_from_db(
-            Path(full_features_erds_db_path), save_type
-        )
+        features_all, erds_all = get_features_and_erds_from_db(Path(full_features_erds_db_path), save_type)
         [
             train_features,
             train_erds,
             validation_features,
             validation_erds,
-        ] = training_validation_split(
-            features_all, erds_all, training_split, random_seed=random_seed
-        )
+        ] = training_validation_split(features_all, erds_all, training_split, random_seed=random_seed)
 
     if model_type != "slads-net":
         raise

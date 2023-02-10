@@ -1,47 +1,44 @@
 # ----------------------------------------------------------------------- #
 # Copyright (c) 2023, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
-# Copyright 2021. UChicago Argonne, LLC. This software was produced       #
-# under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
-# Laboratory (ANL), which is operated by UChicago Argonne, LLC for the    #
-# U.S. Department of Energy. The U.S. Government has rights to use,       #
-# reproduce, and distribute this software.  NEITHER THE GOVERNMENT NOR    #
-# UChicago Argonne, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR        #
-# ASSUMES ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is     #
-# modified to produce derivative works, such modified software should     #
-# be clearly marked, so as not to confuse it with the version available   #
-# from ANL.                                                               #
+# Software Name:    Fast Autonomous Scanning Toolkit (FAST)               #
+# By: Argonne National Laboratory                                         #
+# OPEN SOURCE LICENSE                                                     #
 #                                                                         #
-# Additionally, redistribution and use in source and binary forms, with   #
-# or without modification, are permitted provided that the following      #
-# conditions are met:                                                     #
+# Redistribution and use in source and binary forms, with or without      #
+# modification, are permitted provided that the following conditions      #
+# are met:                                                                #
 #                                                                         #
-#     * Redistributions of source code must retain the above copyright    #
-#       notice, this list of conditions and the following disclaimer.     #
+# 1. Redistributions of source code must retain the above copyright       #
+#    notice, this list of conditions and the following disclaimer.        #
 #                                                                         #
-#     * Redistributions in binary form must reproduce the above copyright #
-#       notice, this list of conditions and the following disclaimer in   #
-#       the documentation and/or other materials provided with the        #
-#       distribution.                                                     #
+# 2. Redistributions in binary form must reproduce the above copyright    #
+#    notice, this list of conditions and the following disclaimer in      #
+#    the documentation and/or other materials provided with the           #
+#    distribution.                                                        #
 #                                                                         #
-#     * Neither the name of UChicago Argonne, LLC, Argonne National       #
-#       Laboratory, ANL, the U.S. Government, nor the names of its        #
-#       contributors may be used to endorse or promote products derived   #
-#       from this software without specific prior written permission.     #
+# 3. Neither the name of the copyright holder nor the names of its        #
+#    contributors may be used to endorse or promote products derived from #
+#    this software without specific prior written permission.             #
 #                                                                         #
-# THIS SOFTWARE IS PROVIDED BY UChicago Argonne, LLC AND CONTRIBUTORS     #
+# *********************************************************************** #
+#                                                                         #
+# DISCLAIMER                                                              #
+#                                                                         #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS     #
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT       #
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS       #
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL UChicago     #
-# Argonne, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,        #
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE          #
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,    #
 # INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,    #
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;        #
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER        #
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT      #
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN       #
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         #
-# POSSIBILITY OF SUCH DAMAGE.                                             #
-# ----------------------------------------------------------------------- #
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS   #
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED      #
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,  #
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF   #
+# THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY            #
+# OF SUCH DAMAGE.                                                         #
+# *********************************************************************** #
+
 from copy import deepcopy
 
 import numpy as np
@@ -88,6 +85,7 @@ class Sample:
         self.erd_model = erd_model
 
         self.iteration = 0
+        self.poly_features = None
 
     def perform_measurements(self, new_idxs: npt.ArrayLike):
 
@@ -96,16 +94,12 @@ class Sample:
         self.mask[new_idxs[:, 0], new_idxs[:, 1]] = 1
 
         # Update which positions have not yet been measured
-        self.measurement_info.measured_idxs = np.concatenate(
-            (self.measurement_info.measured_idxs, new_idxs), axis=0
-        )
+        self.measurement_info.measured_idxs = np.concatenate((self.measurement_info.measured_idxs, new_idxs), axis=0)
         self.measurement_info.unmeasured_idxs = np.transpose(np.where(self.mask == 0))
 
         new_values = self.measurement_interface.perform_measurement(new_idxs)
 
-        self.measurement_info.measured_values = np.concatenate(
-            (self.measurement_info.measured_values, new_values)
-        )
+        self.measurement_info.measured_values = np.concatenate((self.measurement_info.measured_values, new_values))
 
         # Update percentage pixels measured; only when not fromRecon
         self.ratio_measured = np.sum(self.mask) / self.params_sample.image_size
@@ -126,19 +120,15 @@ class Sample:
         new_values = recon_image[new_idxs[:, 0], new_idxs[:, 1]]
         mask[new_idxs[:, 0], new_idxs[:, 1]] = 1
 
-        measurement_info.measured_idxs = np.concatenate(
-            (measurement_info.measured_idxs, new_idxs), axis=0
-        )
+        measurement_info.measured_idxs = np.concatenate((measurement_info.measured_idxs, new_idxs), axis=0)
         measurement_info.unmeasured_idxs = np.transpose(np.where(mask == 0))
-        measurement_info.measured_values = np.concatenate(
-            (measurement_info.measured_values, new_values)
-        )
+        measurement_info.measured_values = np.concatenate((measurement_info.measured_values, new_values))
 
         return mask, measurement_info, new_values
 
     def _get_limited_update_locations(
         self, mask: npt.NDArray, measurement_info: MeasurementInfo
-    ) -> npt.NDArray[int]:
+    ) -> npt.NDArray[np.int]:
 
         if (
             self.params_erd.calculate_full_erd_per_step
@@ -150,17 +140,10 @@ class Sample:
         new_idxs = measurement_info.new_idxs
 
         suggested_radius = np.sqrt(
-            (1 / np.pi)
-            * self.params_sample.image_size
-            * self.params_gen.num_neighbors
-            / measured_idxs.shape[0]
+            (1 / np.pi) * self.params_sample.image_size * self.params_gen.num_neighbors / measured_idxs.shape[0]
         )
-        update_radius = np.max(
-            [suggested_radius, self.params_erd.affected_neighbors_window_min]
-        )
-        update_radius = np.min(
-            [update_radius, self.params_erd.affected_neighbors_window_max]
-        ).astype("int")
+        update_radius = np.max([suggested_radius, self.params_erd.affected_neighbors_window_min])
+        update_radius = np.min([update_radius, self.params_erd.affected_neighbors_window_max]).astype("int")
 
         update_radius_mat = np.zeros(self.params_sample.image_shape)
 
@@ -176,39 +159,29 @@ class Sample:
                 update_radius_mat[uix1:uix2, uiy1:uiy2] = 1
 
             # update_idxs = np.where(update_radius_mat[~self.mask] == 1)
-            unmeasured_idxs = np.transpose(
-                np.where(np.logical_and(mask == 0, update_radius_mat == 1))
-            )
+            unmeasured_idxs = np.transpose(np.where(np.logical_and(mask == 0, update_radius_mat == 1)))
 
             if unmeasured_idxs.size == 0:
-                update_radius = (
-                    update_radius * self.params_erd.affected_window_increase_factor
-                )
+                update_radius = update_radius * self.params_erd.affected_window_increase_factor
             else:
                 done = True
         return unmeasured_idxs
 
     def reconstruct_and_compute_erd(self):
         # Compute feature information for SLADS models; not needed for DLADS
-        unmeasured_idxs = self._get_limited_update_locations(
-            self.mask.copy(), deepcopy(self.measurement_info)
-        )
+        unmeasured_idxs = self._get_limited_update_locations(self.mask.copy(), deepcopy(self.measurement_info))
 
         measurement_info = deepcopy(self.measurement_info)
         measurement_info.unmeasured_idxs = unmeasured_idxs
 
         # Determine neighbor information for all unmeasured locations
         if len(self.measurement_info.unmeasured_idxs) > 0:
-            self.neighbors = find_neighbors(
-                measurement_info, self.params_gen.num_neighbors
-            )
+            self.neighbors = find_neighbors(measurement_info, self.params_gen.num_neighbors)
         else:
             self.neighbors = NeighborsInfo([], [], [], [])
 
         # Compute reconstructions, resize to physical dimensions
-        self.recon_image = compute_recon(
-            self.recon_image, measurement_info, self.neighbors
-        )
+        self.recon_image = compute_recon(self.recon_image, measurement_info, self.neighbors)
 
         if self.params_erd.model_type == "slads-net":
             self.poly_features = compute_poly_features(
@@ -236,14 +209,10 @@ class Sample:
         self.ERD = self._rescale_and_fix_erd(self.ERD, self.mask)
         self.iteration += 1
 
-    def _reconstruct_and_compute_erd_from_recon(
-        self, mask, measurement_info, recon_image, erd
-    ):
+    def _reconstruct_and_compute_erd_from_recon(self, mask, measurement_info, recon_image, erd):
         # Compute feature information for SLADS models; not needed for DLADS
 
-        unmeasured_idxs = self._get_limited_update_locations(
-            mask.copy(), deepcopy(measurement_info)
-        )
+        unmeasured_idxs = self._get_limited_update_locations(mask.copy(), deepcopy(measurement_info))
 
         measurement_info = deepcopy(measurement_info)
         measurement_info.unmeasured_idxs = unmeasured_idxs
@@ -310,17 +279,13 @@ class Sample:
                 break
 
             # Find next measurement location and store the chosen location for later, actual measurement
-            new_idx = unmeasured_idxs[
-                np.argmax(erd[unmeasured_idxs[:, 0], unmeasured_idxs[:, 1]])
-            ]
+            new_idx = unmeasured_idxs[np.argmax(erd[unmeasured_idxs[:, 0], unmeasured_idxs[:, 1]])]
 
             # Perform the measurement, using values from reconstruction
-            mask, measurement_info, new_values = self._perform_measurements_from_recon(
+            mask, measurement_info, _ = self._perform_measurements_from_recon(
                 mask, measurement_info, recon_image, new_idx
             )
-            recon_image, erd = self._reconstruct_and_compute_erd_from_recon(
-                mask, measurement_info, recon_image, erd
-            )
+            recon_image, erd = self._reconstruct_and_compute_erd_from_recon(mask, measurement_info, recon_image, erd)
 
             # When enough new locations have been determined, break from loop
             new_idxs.append(new_idx.tolist())
@@ -332,9 +297,7 @@ class Sample:
     def find_new_measurement_idxs(self):
         if self.params_sample.scan_method == "random":
             np.random.shuffle(self.measurement_info.unmeasured_idxs)
-            new_idxs = self.measurement_info.unmeasured_idxs[
-                : self.params_sample.outer_batch_size
-            ].astype(int)
+            new_idxs = self.measurement_info.unmeasured_idxs[: self.params_sample.outer_batch_size].astype(int)
 
         elif self.params_sample.scan_method == "pointwise":
             batch_size = self.params_sample.outer_batch_size
@@ -374,22 +337,16 @@ class ExperimentalSample(Sample):
         self.mask[new_idxs[:, 0], new_idxs[:, 1]] = 1
 
         # Update which positions have not yet been measured
-        self.measurement_info.measured_idxs = np.concatenate(
-            (self.measurement_info.measured_idxs, new_idxs), axis=0
-        )
+        self.measurement_info.measured_idxs = np.concatenate((self.measurement_info.measured_idxs, new_idxs), axis=0)
         self.measurement_info.unmeasured_idxs = np.transpose(np.where(self.mask == 0))
 
-        new_values_before_norm = self.measurement_interface.perform_measurement(
-            new_idxs
-        )
+        new_values_before_norm = self.measurement_interface.perform_measurement(new_idxs)
         self.measurement_info.unnormalized_values = np.concatenate(
             (self.measurement_info.unnormalized_values, new_values_before_norm)
         )
 
         # self.measurement_info.measured_values = np.concatenate((self.measurement_info.measured_values, new_values))
-        self.measurement_info.measured_values = renormalize(
-            self.measurement_info.unnormalized_values
-        )
+        self.measurement_info.measured_values = renormalize(self.measurement_info.unnormalized_values)
         # self.measurement_info.measured_values = self.measurement_info.unnormalized_values
 
         # Update percentage pixels measured; only when not fromRecon

@@ -1,47 +1,43 @@
 # ----------------------------------------------------------------------- #
 # Copyright (c) 2023, UChicago Argonne, LLC. All rights reserved.         #
 #                                                                         #
-# Copyright 2021. UChicago Argonne, LLC. This software was produced       #
-# under U.S. Government contract DE-AC02-06CH11357 for Argonne National   #
-# Laboratory (ANL), which is operated by UChicago Argonne, LLC for the    #
-# U.S. Department of Energy. The U.S. Government has rights to use,       #
-# reproduce, and distribute this software.  NEITHER THE GOVERNMENT NOR    #
-# UChicago Argonne, LLC MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR        #
-# ASSUMES ANY LIABILITY FOR THE USE OF THIS SOFTWARE.  If software is     #
-# modified to produce derivative works, such modified software should     #
-# be clearly marked, so as not to confuse it with the version available   #
-# from ANL.                                                               #
+# Software Name:    Fast Autonomous Scanning Toolkit (FAST)               #
+# By: Argonne National Laboratory                                         #
+# OPEN SOURCE LICENSE                                                     #
 #                                                                         #
-# Additionally, redistribution and use in source and binary forms, with   #
-# or without modification, are permitted provided that the following      #
-# conditions are met:                                                     #
+# Redistribution and use in source and binary forms, with or without      #
+# modification, are permitted provided that the following conditions      #
+# are met:                                                                #
 #                                                                         #
-#     * Redistributions of source core must retain the above copyright    #
-#       notice, this list of conditions and the following disclaimer.     #
+# 1. Redistributions of source code must retain the above copyright       #
+#    notice, this list of conditions and the following disclaimer.        #
 #                                                                         #
-#     * Redistributions in binary form must reproduce the above copyright #
-#       notice, this list of conditions and the following disclaimer in   #
-#       the documentation and/or other materials provided with the        #
-#       distribution.                                                     #
+# 2. Redistributions in binary form must reproduce the above copyright    #
+#    notice, this list of conditions and the following disclaimer in      #
+#    the documentation and/or other materials provided with the           #
+#    distribution.                                                        #
 #                                                                         #
-#     * Neither the name of UChicago Argonne, LLC, Argonne National       #
-#       Laboratory, ANL, the U.S. Government, nor the names of its        #
-#       contributors may be used to endorse or promote products derived   #
-#       from this software without specific prior written permission.     #
+# 3. Neither the name of the copyright holder nor the names of its        #
+#    contributors may be used to endorse or promote products derived from #
+#    this software without specific prior written permission.             #
 #                                                                         #
-# THIS SOFTWARE IS PROVIDED BY UChicago Argonne, LLC AND CONTRIBUTORS     #
+# *********************************************************************** #
+#                                                                         #
+# DISCLAIMER                                                              #
+#                                                                         #
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS     #
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT       #
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS       #
-# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL UChicago     #
-# Argonne, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,        #
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE          #
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,    #
 # INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,    #
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;        #
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER        #
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT      #
-# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN       #
-# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE         #
-# POSSIBILITY OF SUCH DAMAGE.                                             #
-# ----------------------------------------------------------------------- #
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS   #
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED      #
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,  #
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF   #
+# THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY            #
+# OF SUCH DAMAGE.                                                         #
+# *********************************************************************** #
 
 #
 # Authors 06/29/22:
@@ -66,7 +62,6 @@ import tkinter as tk
 from pathlib import Path
 
 import epics
-import helper
 import numpy as np
 from paramiko import SFTPClient
 
@@ -75,6 +70,7 @@ from ..core.sampling import check_stopping_criteria
 from ..utils import logger
 from ..utils.readMDA import readMDA
 from ..utils.sftp import setup_sftp, sftp_get, sftp_put
+from . import helper
 
 logger.setup_logging()
 
@@ -160,9 +156,7 @@ class MainWindow:
                 # requests.post(webhook, json={"text":"{0}: AGX : Delay between trigger times was less than 20s.
                 # Ignoring the trigger.".format(datetime.now())})
                 if self.debug:
-                    logging.info(
-                        "WARNING: Delay between trigger times was less than 20s. Ignoring the trigger."
-                    )
+                    logging.info("WARNING: Delay between trigger times was less than 20s. Ignoring the trigger.")
                 return
 
             self.monitor_start_time_prev = t00
@@ -172,17 +166,13 @@ class MainWindow:
             n1 = self.scan_file_offset
             n2 = self.current_file_suffix
 
-            mda_file_name = "/home/sector26/2022R2/20220621/mda/26idbSOFT_%04d.mda" % (
-                n1 + n2
-            )
+            mda_file_name = "/home/sector26/2022R2/20220621/mda/26idbSOFT_%04d.mda" % (n1 + n2)
             logging.info("MDA file name is " + mda_file_name)
 
             self.sftp_get(mda_file_name, "mda_current.mda")
 
             t1 = time.time()
-            logging.info(
-                "AGX received data from detector (time elapsed) %.3f s." % (t1 - t0)
-            )
+            logging.info("AGX received data from detector (time elapsed) %.3f s." % (t1 - t0))
 
             mda = readMDA("mda_current.mda", verbose=False)
             data = np.array(mda[1].d[3].data)
@@ -190,20 +180,13 @@ class MainWindow:
             # 32 for attoz, 35 for x motor
             xx = (
                 np.round(
-                    (np.array(mda[1].d[32].data) - self.xpos)
-                    / self.scan_stepsize
-                    / self.xfactor,
+                    (np.array(mda[1].d[32].data) - self.xpos) / self.scan_stepsize / self.xfactor,
                     0,
                 )
                 + self.scan_centerx
             )
             # 31 for samy, 36 for y motor
-            yy = (
-                np.round(
-                    (np.array(mda[1].d[31].data) - self.ypos) / self.scan_stepsize, 0
-                )
-                + self.scan_centery
-            )
+            yy = np.round((np.array(mda[1].d[31].data) - self.ypos) / self.scan_stepsize, 0) + self.scan_centery
 
             # xx = np.round((np.array(mda[1].d[32].data) - self.xpos) / self.scan_stepsize / self.xfactor, 0) + self.scan_centerx
             # yy = np.round((np.array(mda[1].d[31].data) - self.ypos) / self.scan_stepsize, 0) + self.scan_centery
@@ -276,18 +259,16 @@ class MainWindow:
 
         new_idxs_to_write = np.array(self.sample.find_new_measurement_idxs()).copy()
         if self.checkpoint_skipped:
-            self.new_idxs_to_write = np.concatenate(
-                (self.new_idxs_to_write, new_idxs_to_write), axis=0
-            )[: self.store_file_scan_points_num]
+            self.new_idxs_to_write = np.concatenate((self.new_idxs_to_write, new_idxs_to_write), axis=0)[
+                : self.store_file_scan_points_num
+            ]
         else:
             self.new_idxs_to_write = np.concatenate(
                 (self.new_idxs_to_write[: -self.points_per_route], new_idxs_to_write),
                 axis=0,
             )[: self.store_file_scan_points_num]
         t1 = time.time()
-        logging.info(
-            "Time required to calculate the new positions is %.3f sec." % (t1 - t0)
-        )
+        logging.info("Time required to calculate the new positions is %.3f sec." % (t1 - t0))
 
         recon_local_fname = "recon.npy"
         np.save(recon_local_fname, self.sample.recon_image)
@@ -307,9 +288,7 @@ class MainWindow:
             self.completed_run_flag = True
         t2 = time.time()
         self.sftp_put(recon_local_fname, str(REMOTE_PATH / "recon_latest.npy"))
-        logging.info(
-            "Sent new smart scan positions (time elapsed) %.3f s.\n" % (t2 - t1)
-        )
+        logging.info("Sent new smart scan positions (time elapsed) %.3f s.\n" % (t2 - t1))
 
     def write_instructions_file(self):
         fname = "instructions_%03d.csv" % self.current_file_suffix
@@ -341,12 +320,8 @@ class MainWindow:
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("m", help="Current mda file offset.", type=int)
-    argparser.add_argument(
-        "-c", default="config.ini", help="Name of config file to download from remote."
-    )
-    argparser.add_argument(
-        "-r", "--stop_ratio", type=float, default=0.65, help="Stop ratio."
-    )
+    argparser.add_argument("-c", default="config.ini", help="Name of config file to download from remote.")
+    argparser.add_argument("-r", "--stop_ratio", type=float, default=0.65, help="Stop ratio.")
     argparser.add_argument(
         "-g",
         "--indices_to_generate",
@@ -368,8 +343,7 @@ if __name__ == "__main__":
 
     if 2 * sysargs.points_to_scan < sysargs.indices_to_generate:
         logging.error(
-            f"Number of points generated  should be at least 2x the number of points "
-            "scanned at every step."
+            f"Number of points generated  should be at least 2x the number of points " "scanned at every step."
         )
         sys.exit()
 
@@ -408,12 +382,8 @@ if __name__ == "__main__":
 
     init_data_dir = ""
     helper.clean_data_directory(init_data_dir)
-    helper.get_init_npzs_from_remote(
-        sftp=sftp, remote_dir=REMOTE_PATH, data_dir=init_data_dir
-    )
-    n_init, initial_idxs, initial_intensities = helper.load_idxs_and_intensities(
-        init_data_dir
-    )
+    helper.get_init_npzs_from_remote(sftp=sftp, remote_dir=REMOTE_PATH, data_dir=init_data_dir)
+    n_init, initial_idxs, initial_intensities = helper.load_idxs_and_intensities(init_data_dir)
 
     logging.info("Downloaded %d init files from remote %s." % (n_init, REMOTE_PATH))
 
