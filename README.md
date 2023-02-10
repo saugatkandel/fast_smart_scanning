@@ -66,3 +66,7 @@ Then navigate to the appropriate notebook.
 
 The jupyter notebooks in `work_directory` contain the example codes. To use the API within a python script, 
 we can follow the same code pattern demonstrated in the jupyter notebooks.
+
+### Paper data
+
+The data used in the paper wil be added to the respository in the near future. In the meantime, it can be provided upon reasonable request. 
