@@ -209,7 +209,7 @@ def generate_training_databases(
     else:
         raise ValueError("Input images must be supplied through one of the image_* parameters")
 
-    img_data_all = train_params.input_images_arrays
+    img_data_all = image_arrays
     rng = np.random.default_rng(train_params.random_seed)
     sim_sample_params = [
         inp.SimulatedSampleParams(

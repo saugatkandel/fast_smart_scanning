@@ -84,4 +84,4 @@ def load_image_path_renormalize(
     if img_suffix is None:
         img_suffix = img_format
     image_files = list(Path(imgs_path).glob(f"*.{img_suffix}"))
-    return load_image_renormalize(image_files, img_format, renormalize_images, max_normalized_value)
+    return load_image_list_renormalize(image_files, img_format, renormalize_images, max_normalized_value)
