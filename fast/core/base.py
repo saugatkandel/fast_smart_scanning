@@ -45,7 +45,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ..input_params import ERDInputParams, GeneralInputParams, SampleParams
-from ..utils.renormalize import renormalize
+from ..utils.img_loader import renormalize
 from .data_structures import MeasurementInfo, NeighborsInfo
 from .erd import ERDModel
 from .measurement_interface import MeasurementInterface

@@ -44,18 +44,15 @@ from pathlib import Path
 import joblib
 import numpy as np
 import numpy.typing as npt
-import tifffile as tif
 from tqdm.notebook import tqdm
 
 from .. import input_params as inp
-
-
-from ..utils.renormalize import renormalize
 from .erd import SladsModelParams, SladsSklearnModel
 from .measurement_interface import TransmissionSimulationMeasurementInterface
 from .results import Result
 from .sampling import run_sampling
 from .simulation_base import SimulatedSample
+from ..utils import img_loader
 
 
 def generate_database_per_c(
@@ -65,6 +62,7 @@ def generate_database_per_c(
     num_repeats_per_mask=1,
     measurements_per_initial_mask=1,
     calculate_full_erd_per_step=True,
+    verbose=True,
 ):
     # For the number of mask iterations specified, create new masks and scan them with the specified method
 
@@ -90,11 +88,7 @@ def generate_database_per_c(
 
             if sampling_type == "slow_detailed":
                 _emulate_experimental_sampling(
-                    sample_params,
-                    measurement_interface,
-                    params_erd,
-                    params_gen,
-                    results_all,
+                    sample_params, measurement_interface, params_erd, params_gen, results_all, verbose=verbose
                 )
             elif sampling_type == "fast_limited":
                 _run_fast_limited_sampling(
@@ -104,6 +98,7 @@ def generate_database_per_c(
                     params_gen,
                     measurements_per_initial_mask,
                     results_all,
+                    verbose=verbose,
                 )
     return results_all
 
@@ -133,7 +128,7 @@ def save_database_per_c(results_all: Result, results_dir: str, save_type: str = 
     return training_database
 
 
-def _emulate_experimental_sampling(sample_params, measurement_interface, params_erd, params_gen, results):
+def _emulate_experimental_sampling(sample_params, measurement_interface, params_erd, params_gen, results, verbose=True):
     """Find new measurement position like in the experimental sampling runs"""
     (
         sample_params.initial_idxs,
@@ -147,7 +142,7 @@ def _emulate_experimental_sampling(sample_params, measurement_interface, params_
         measurement_interface=measurement_interface,
         erd_model=None,
     )
-    run_sampling(sample, results=results)
+    run_sampling(sample, results=results, verbose=verbose)
 
 
 def _run_fast_limited_sampling(
@@ -157,6 +152,7 @@ def _run_fast_limited_sampling(
     params_gen,
     measurements_per_initial_mask,
     results,
+    verbose=True,
 ):
     start_ratio = sample_params.initial_scan_ratio
     stop_ratio = sample_params.stop_ratio
@@ -176,14 +172,44 @@ def _run_fast_limited_sampling(
             measurement_interface=measurement_interface,
             erd_model=None,
         )
-        run_sampling(sample, max_iterations=1, results=results)
+        run_sampling(sample, max_iterations=1, results=results, verbose=verbose)
 
 
-def generate_training_databases(train_params: inp.TrainingInputParams):
-    imgs_path = Path(train_params.input_images_path)
-    tif_names = imgs_path.glob("*.tif")
+def generate_training_databases(
+    train_params: inp.TrainingInputParams,
+    output_dir: str,
+    image_arrays: list[npt.NDArray] = None,
+    image_filenames_list: list[str] = None,
+    image_search_path: str = None,
+    renormalize_images: bool = True,
+    max_value: float = 100,
+    img_format: str = "tif",
+):
+    if image_arrays is not None:
+        if image_filenames_list is not None or image_search_path is not None:
+            raise ValueError("Can only supply one of the arrays, list of filenames, or the search path.")
+        if renormalize_images:
+            image_arrays = [img_loader.renormalize(img, max_value) for img in image_arrays]
+    elif image_filenames_list is not None:
+        if image_search_path is not None:
+            raise ValueError("Can only supply one of the arrays, list of filenames, or the search path.")
+        image_arrays = img_loader.load_image_list_renormalize(
+            image_filenames_list,
+            renormalize_images=renormalize_images,
+            max_normalized_value=max_value,
+            img_format=img_format,
+        )
+    elif image_search_path is not None:
+        image_arrays = img_loader.load_image_path_renormalize(
+            image_search_path,
+            img_format=img_format,
+            renormalize_images=renormalize_images,
+            max_normalized_value=max_value,
+        )
+    else:
+        raise ValueError("Input images must be supplied through one of the image_* parameters")
 
-    img_data_all = [renormalize(tif.imread(f)) for f in tif_names]
+    img_data_all = train_params.input_images_arrays
     rng = np.random.default_rng(train_params.random_seed)
     sim_sample_params = [
         inp.SimulatedSampleParams(
@@ -199,7 +225,7 @@ def generate_training_databases(train_params: inp.TrainingInputParams):
         for img in img_data_all
     ]
 
-    output_dir = Path(train_params.output_dir)
+    output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True)
     pbar = tqdm(train_params.test_c_values, leave=True)
     results_all = []
@@ -212,6 +238,7 @@ def generate_training_databases(train_params: inp.TrainingInputParams):
             measurements_per_initial_mask=train_params.measurements_per_initial_mask,
             num_repeats_per_mask=train_params.num_repeats_per_mask,
             calculate_full_erd_per_step=train_params.calculate_full_erd_per_step,
+            verbose=train_params.verbose_training,
         )
 
         out_dir_this = output_dir / f"c_{c_value}"
@@ -283,14 +310,14 @@ def fit_erd_model(
     if train_features_erds is not None:
         print(
             "Ignoring the features db path and train/val split ratio."
-            f"Directly loading the training features and erds instead."
+            + "Directly loading the training features and erds instead."
         )
         train_features, train_erds = train_features_erds
     else:
         assert (full_features_erds_db_path is not None) and (0 < training_split < 1)
         print(
-            f"Loading the full database and splitting train/val data."
-            f"Ensure that the same random seed is used for both this training function and the validation function."
+            "Loading the full database and splitting train/val data."
+            + "Ensure that the same random seed is used for both this training function and the validation function."
         )
         full_features_erds_db_path = Path(full_features_erds_db_path)
         features_all, erds_all = get_features_and_erds_from_db(full_features_erds_db_path, save_type)

@@ -55,6 +55,7 @@ def run_sampling(
     disable_progress_bar: bool = True,
     debug: bool = False,
     indices_to_actually_measure: int = None,
+    verbose: bool = True,
 ):
 
     # Indicate that the stopping condition has not yet been met
@@ -70,7 +71,7 @@ def run_sampling(
         store_at = 1
 
     # Check stopping criteria, just in case of a bad input
-    completed_run_flag = check_stopping_criteria(sample, sampling_iters, max_iterations, stop_percentage)
+    completed_run_flag = check_stopping_criteria(sample, sampling_iters, max_iterations, stop_percentage, verbose)
 
     # Until the stopping criteria has been met
     with tqdm(
@@ -110,7 +111,8 @@ def run_sampling(
                         results.add(sample)
                         store_at += 1
             else:
-                print("No new scan position found. Stopping scan.")
+                if verbose:
+                    print("No new scan position found. Stopping scan.")
                 completed_run_flag = True
                 break
 
@@ -129,23 +131,24 @@ def run_sampling(
 
 
 def check_stopping_criteria(
-    sample: Sample,
-    current_iter: int,
-    max_iterations: int = np.inf,
-    stop_percentage: float = 100,
+    sample: Sample, current_iter: int, max_iterations: int = np.inf, stop_percentage: float = 100, verbose: bool = True
 ):
     percent_measured = round(sample.ratio_measured * 100, 2)
     if sample.params_sample.scan_method in ["pointwise", "random"]:
         if sample.ratio_measured >= sample.params_sample.stop_ratio:
-            print("Reached the stopping ratio set in the sample parameters. Stopping scan.")
+            if verbose:
+                print("Reached the stopping ratio set in the sample parameters. Stopping scan.")
             return True
     if np.sum(sample.ERD) == 0:
-        print("No more improvements expected. Stopping scan.")
+        if verbose:
+            print("No more improvements expected. Stopping scan.")
         return True
     if current_iter >= max_iterations:
-        print("Reached the maximum iterations for this sampling run. Stopping scan.")
+        if verbose:
+            print("Reached the maximum iterations for this sampling run. Stopping scan.")
         return True
     if percent_measured > stop_percentage:
-        print("Reached the maximum sampling percentage for this sampling run. Stopping scan.")
+        if verbose:
+            print("Reached the maximum sampling percentage for this sampling run. Stopping scan.")
         return True
     return False

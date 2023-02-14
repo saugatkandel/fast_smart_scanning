@@ -41,6 +41,11 @@
 import dataclasses as dt
 
 import numpy as np
+import numpy.typing as npt
+from skopt.sampler import Hammersly
+from skopt.space import Space
+
+from .utils import img_loader
 
 SUPPORTED_FEATURE_TYPES = ["polynomial", "rbf"]
 SUPPORTED_MODEL_TYPES = ["slads-net"]
@@ -54,8 +59,6 @@ SUPPORTED_SAVE_DATABASE_TYPES = ["slads-net-reduced", "generic"]
 
 @dt.dataclass(frozen=True)
 class TrainingInputParams:
-    input_images_path: str
-    output_dir: str
     initial_scan_ratio: float = 0.01  # initial scan ratio
     initial_mask_type: str = "random"
     stop_ratio: float = 0.8  # stop ratio
@@ -69,6 +72,7 @@ class TrainingInputParams:
     test_c_values: list = dt.field(default_factory=lambda: [2, 4, 8, 16, 32, 64])
     calculate_full_erd_per_step: bool = True
     save_type: str = "slads-net-reduced"
+    verbose_training: bool = True
 
     def __post_init__(self):
         assert self.sampling_type in SUPPORTED_SAMPLING_TYPES
@@ -187,8 +191,6 @@ class SampleParams:
 
     def _gen_hammersly_scan(self):
         # Use the Hammersly sequence to generate the low discrepancy random scan points
-        from skopt.sampler import Hammersly
-        from skopt.space import Space
 
         seed = self.rng.integers(1000)
 
@@ -204,7 +206,7 @@ class SampleParams:
 
 
 class SimulatedSampleParams(SampleParams):
-    def __init__(self, image, simulation_type, *args, **kwargs):
+    def __init__(self, image: npt.NDArray, simulation_type: str, *args, **kwargs):
         assert simulation_type in SIMULATION_TYPES
         self.image = image
         self.simulation_type = simulation_type
@@ -212,7 +214,7 @@ class SimulatedSampleParams(SampleParams):
 
 
 class ExperimentSampleParams(SampleParams):
-    def __init__(self, image, simulation_type, *args, **kwargs):
+    def __init__(self, image: npt.NDArray, simulation_type: str, *args, **kwargs):
         assert simulation_type in SIMULATION_TYPES
         self.image = image
         self.simulation_type = simulation_type
