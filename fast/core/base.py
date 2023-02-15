@@ -126,9 +126,7 @@ class Sample:
 
         return mask, measurement_info, new_values
 
-    def _get_limited_update_locations(
-        self, mask: npt.NDArray, measurement_info: MeasurementInfo
-    ) -> npt.NDArray[np.int]:
+    def _get_limited_update_locations(self, mask: npt.NDArray, measurement_info: MeasurementInfo) -> npt.NDArray[int]:
 
         if (
             self.params_erd.calculate_full_erd_per_step

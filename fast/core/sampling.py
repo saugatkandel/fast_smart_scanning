@@ -119,7 +119,7 @@ def run_sampling(
             percent_measured = round(sample.ratio_measured * 100, 2)
 
             # Check stopping criteria
-            completed_run_flag = check_stopping_criteria(sample, sampling_iters, max_iterations, stop_percentage)
+            completed_run_flag = check_stopping_criteria(sample, sampling_iters, max_iterations, stop_percentage, verbose=verbose)
 
             # Update the progress bar
             pbar.set_postfix({"total ERD": sample.ERD.sum()})
