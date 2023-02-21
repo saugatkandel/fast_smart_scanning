@@ -42,10 +42,10 @@ import dataclasses as dt
 
 import numpy as np
 import numpy.typing as npt
-from skopt.sampler import Hammersly
-from skopt.space import Space
+from scipy.stats import qmc
 
-from .utils import img_loader
+# from skopt.sampler import Hammersly
+# from skopt.space import Space
 
 SUPPORTED_FEATURE_TYPES = ["polynomial", "rbf"]
 SUPPORTED_MODEL_TYPES = ["slads-net"]
@@ -53,7 +53,7 @@ SUPPORTED_SAMPLING_TYPES = ["slow_detailed", "fast_limited"]
 SCAN_TYPES = ["transmission", "diffraction"]
 GRID_TO_PIXEL_METHODS = ["pixel", "subpixel"]
 SIMULATION_TYPES = ["training", "emulation", "visualize_erd"]
-SUPPORTED_INITIAL_MASK_TYPES = ["random", "hammersly"]
+SUPPORTED_INITIAL_MASK_TYPES = ["random", "hammersly", "sobol", "halton", "latin-hypercube"]
 SUPPORTED_SAVE_DATABASE_TYPES = ["slads-net-reduced", "generic"]
 
 
@@ -131,7 +131,7 @@ class SampleParams:
     inner_batch_size: int = 1
     random_seed: int = None
     initial_idxs: list = None
-    initial_mask_type: str = "hammersly"
+    initial_mask_type: str = "halton"
     initial_mask: np.ndarray = dt.field(init=False)
     line_revisit: bool = False  # not in use right now
     rng: np.random.Generator = None
@@ -169,17 +169,23 @@ class SampleParams:
         # List of what points/lines should be initially measured
 
         # If scanning with line-bounded constraint
+        if self.scan_method not in ["linewise", "pointwise", "random"]:
+            raise NotImplementedError
+
         if self.scan_method == "linewise":
             new_idxs, new_mask = self._gen_linewise_scan()
-        elif self.scan_method == "pointwise" or self.scan_method == "random":
-            if self.initial_mask_type == "random":
+        print(self.scan_method, self.initial_mask_type)
+        # scan_method is eithe rpointwise or random
+        match self.initial_mask_type:
+            case "random":
                 new_idxs, new_mask = self._gen_pointwise_scan()
-            elif self.initial_mask_type == "hammersly":
+            case "hammersly":
                 new_idxs, new_mask = self._gen_hammersly_scan()
-            else:
+            case "sobol" | "halton" | "latin-hypercube":
+                new_idxs, new_mask = self._gen_scipy_quasi_monte_carlo_scan()
+            case _:
                 raise NotImplementedError
-        else:
-            raise NotImplementedError
+
         return new_idxs, new_mask
 
     def _gen_pointwise_scan(self):
@@ -192,6 +198,12 @@ class SampleParams:
     def _gen_hammersly_scan(self):
         # Use the Hammersly sequence to generate the low discrepancy random scan points
 
+        raise NotImplementedError(
+            "Scikit optimize has not been updated to keep up with new >1.24 typing conventions, \
+            and using it with newer numpy versions gives errors. Disabling the Hammersely \
+            sequence until this issue is resolved."
+        )
+
         seed = self.rng.integers(1000)
 
         space = Space([[0, self.image_shape[0] - 1], [0, self.image_shape[1] - 1]])
@@ -200,6 +212,25 @@ class SampleParams:
         mask = np.zeros(self.image_shape, dtype="bool")
         mask[new_idxs[:, 0], new_idxs[:, 1]] = 1
         return new_idxs, mask
+
+    def _gen_scipy_quasi_monte_carlo_scan(self):
+        seed = self.rng.integers(1000)
+        match self.initial_mask_type:
+            case "sobol":
+                sampler = qmc.Sobol(d=2, seed=seed)
+            case "halton":
+                sampler = qmc.Halton(d=2, seed=seed)
+            case "latin-hypercube":
+                sampler = qmc.LatinHypercube(d=2, seed=seed)
+
+        samples = sampler.integers(
+            n=self.initial_scan_points_num,
+            l_bounds=[0, 0],
+            u_bounds=[self.image_shape[0], self.image_shape[1]],
+        )
+        mask = np.zeros(self.image_shape, dtype="bool")
+        mask[samples[:, 0], samples[:, 1]] = 1
+        return samples, mask
 
     def _gen_linewise_scan(self):
         raise NotImplementedError
