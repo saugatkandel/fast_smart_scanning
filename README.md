@@ -18,10 +18,10 @@ the adoption at the Sector 26 beamline of APS. The code breakdown is as follows:
 - The `fast/s26_analysis` submodule contains routines for simulation and analysis corresponding to S26. 
 - The `input_params.py` file contains default input settings for simulation, experiment, training, etc.
 
-Added 04/02/23:
-The new version of the code has been modified to use the Sobol, Halton, or Latin-hypercube initializations using the Scipy package instead of the Hammersly initialization using the Scikit-optimize package. This is because the Scikit-optimize package has not been updated to support `numpy>=1.24`. If the Hammersly initialization is desired, then the Scikit-image package needs to be modified manually using the instructions here: https://github.com/scikit-optimize/scikit-optimize/issues/1147.
+#### Added 04/02/23:
 
-The new version of the code also contains an option to generate the scan pattern based on expected feature size, to ensure that `>99%` of image patches of the provided size are sampled during the initial scan. This function, which is in `fast/utils/generate_scan_pattern.py`, has not been included in any of the example notebooks just yet. 
+- The new version of the code has been modified to use the Sobol, Halton, or Latin-hypercube initializations using the Scipy package instead of the Hammersly initialization using the Scikit-optimize package. This is because the Scikit-optimize package has not been updated to support `numpy>=1.24`. If the Hammersly initialization is desired, then the Scikit-image package needs to be modified manually using the instructions here: https://github.com/scikit-optimize/scikit-optimize/issues/1147.
+- The new version of the code also contains an option to generate the scan pattern based on expected feature size, to ensure that `>99%` of image patches of the provided size are sampled during the initial scan. This function, which is in `fast/utils/generate_scan_pattern.py`, has not been included in any of the example notebooks just yet. 
 
 [^1]: Zhang, Yan, G. M. Dilshan Godaliyadda, Nicola Ferrier, Emine B. Gulsoy, Charles A. Bouman, and Charudatta Phatak. “SLADS-Net: Supervised Learning Approach for Dynamic Sampling Using Deep Neural Networks.” Electronic Imaging 30, no. 15 (January 28, 2018): 131-1–1316. https://doi.org/10.2352/ISSN.2470-1173.2018.15.COIMG-131.  
 [^2]: Godaliyadda, G. M. Dilshan P., Dong Hye Ye, Michael D. Uchic, Michael A. Groeber, Gregery T. Buzzard, and Charles A. Bouman. “A Framework for Dynamic Image Sampling Based on Supervised Learning.” IEEE Transactions on Computational Imaging 4, no. 1 (March 2018): 1–16. https://doi.org/10.1109/TCI.2017.2777482.
@@ -38,7 +38,7 @@ Specifically:
 - `work_directory/sims_paper/simulate_fast.ipynb` contains the code for the FAST results in the numerical simulated presented in the manuscript. 
 - The files `work_directory/sims_paper/simulate_full.ipynb`and  `work_directory/test/comparisons_full.ipynb`respectively contain the full simulation code --- including the raster grid and random sampling simulations --- and the analysis code used in the manuscript. This can be fairly computationally expensive and require a large amount of memory and storage.
 
-Added 04/02/23:
+#### Added 04/02/23:
 - `work_directory/training_usc_sipi/` contains an notebooks that generate a trained model with a number of miscellaneous images from the USC-SIPI and Scikit-image databases. It also contains notebooks to analyze the statistics of these images, and to test their performance on the numerical simulation of the WSe2 flake used in the manuscript. 
 -  `work_directory/training_usc_sipi/` and `work_directory/shepp_logan/` now contains some experiments with the Shepp-Logan phantom as well. The Shepp-Logan phantom is generated on demand using the `odl` (https://odlgroup.github.io/odl/odl.html) package. These examples require either the `odl` package installed separrately or using the command in the `Installation` section below.
 
@@ -76,7 +76,8 @@ jupyter lab
 Then navigate to the appropriate notebook.
 
 
-Added 04/02/23:
+#### Added 04/02/23:
+
 To try the Shepp-Logan phantom examples,  install the package using the `odl` optional dependency:
 ```shell
 pip install -e .[odl]
