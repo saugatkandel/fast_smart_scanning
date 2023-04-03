@@ -81,6 +81,8 @@ def compute_poly_features(
         return _compute_polynomial_features(feature)
     elif feat_type == "rbf":
         return _compute_rbf_features(feature)
+    elif feat_type == "base":
+        return feature
 
 
 # Determine absolute difference between two arrays

@@ -42,6 +42,7 @@
 import argparse
 
 import numpy as np
+import skimage
 
 from ..input_params import SampleParams
 
@@ -49,10 +50,13 @@ from ..input_params import SampleParams
 def generate_scan_pattern(
     numx: int,
     numy: int,
-    ratio_initial_scan: float = 0.1,
+    ratio_initial_scan: float = 0.01,
     num_scan_points: int = None,
     save: bool = False,
     verbose=True,
+    random_seed: int = 11,
+    initial_mask_type: str = "halton",
+    gen_scrambled_initial_mask: bool = True,
 ):
     if num_scan_points is not None:
         if verbose:
@@ -62,12 +66,57 @@ def generate_scan_pattern(
         image_shape=(numy, numx),
         initial_scan_points_num=num_scan_points,
         initial_scan_ratio=ratio_initial_scan,
-        stop_ratio=0.3,
-        random_seed=11,
+        stop_ratio=0.99,
+        random_seed=random_seed,
+        initial_mask_type=initial_mask_type,
+        gen_scrambled_initial_mask=gen_scrambled_initial_mask,
     )
     num_scan_points = np.shape(sample_params.initial_idxs)[0]
     if verbose:
         print("Initial ratio is", num_scan_points / sample_params.image_size)
+    if save:
+        np.savetxt(
+            f"initial_points_{numx}_{numy}_points_{num_scan_points}.csv",
+            sample_params.initial_idxs,
+            delimiter=",",
+            fmt="%10d",
+        )
+    return sample_params.initial_idxs
+
+
+def generate_scan_pattern_by_feature_shape(
+    numx: int,
+    numy: int,
+    feature_shape_yx: tuple[int, int],
+    ratio_initial_scan: float = 0.01,
+    save: bool = False,
+    verbose=True,
+    random_seed: int = 11,
+    initial_mask_type: str = "halton",
+    gen_scrambled_initial_mask: bool = False,
+):
+    while True:
+        sample_params = SampleParams(
+            image_shape=(numy, numx),
+            initial_scan_ratio=ratio_initial_scan,
+            stop_ratio=0.99,
+            random_seed=random_seed,
+            initial_mask_type=initial_mask_type,
+            gen_scrambled_initial_mask=gen_scrambled_initial_mask,
+        )
+
+        mask_as_windows = skimage.util.view_as_windows(sample_params.initial_mask, feature_shape_yx)
+        mask_sum = mask_as_windows.sum(axis=(-1, -2))
+        coverage_ratio = (mask_sum > 0).sum() / mask_sum.size
+        if coverage_ratio < 0.99:
+            ratio_initial_scan += 0.01
+        else:
+            break
+    num_scan_points = np.shape(sample_params.initial_idxs)[0]
+    if verbose:
+        print(
+            f"Initial ratio of {num_scan_points / sample_params.image_size:3.2f} gives {coverage_ratio * 100: 3.2f} coverage to feature patches."
+        )
     if save:
         np.savetxt(
             f"initial_points_{numx}_{numy}_points_{num_scan_points}.csv",

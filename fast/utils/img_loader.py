@@ -49,8 +49,8 @@ import tifffile as tif
 SUPPORTED_IMAGE_FORMATS = ["tif", "tiff", "npy"]
 
 
-def renormalize(image: npt.NDArray, max_value: float = 100.0):
-    image_norm = (image - image.min()) / (image.max() - image.min()) * max_value
+def renormalize(image: npt.NDArray, max_value: float = 100.0, min_value: float = 0):
+    image_norm = (image - image.min()) / (image.max() - image.min()) * (max_value - min_value) + min_value
     return image_norm
 
 
@@ -59,6 +59,7 @@ def load_image_list_renormalize(
     img_format: str,
     renormalize_images: bool = True,
     max_normalized_value: float = 100,
+    min_normalized_value: float = 0,
 ):
     assert img_format in SUPPORTED_IMAGE_FORMATS
 
@@ -69,7 +70,7 @@ def load_image_list_renormalize(
             images = [tif.imread(img) for img in imgs_list]
 
     if renormalize_images:
-        images = [renormalize(img, max_value=max_normalized_value) for img in images]
+        images = [renormalize(img, max_value=max_normalized_value, min_value=min_normalized_value) for img in images]
     return images
 
 
@@ -79,9 +80,11 @@ def load_image_path_renormalize(
     img_suffix: str = None,
     renormalize_images: bool = True,
     max_normalized_value: float = 100,
+    min_normalized_value: float = 0,
 ):
-
     if img_suffix is None:
         img_suffix = img_format
     image_files = list(Path(imgs_path).glob(f"*.{img_suffix}"))
-    return load_image_list_renormalize(image_files, img_format, renormalize_images, max_normalized_value)
+    return load_image_list_renormalize(
+        image_files, img_format, renormalize_images, max_normalized_value, min_normalized_value
+    )

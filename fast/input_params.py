@@ -44,8 +44,15 @@ import numpy as np
 import numpy.typing as npt
 from scipy.stats import qmc
 
-# from skopt.sampler import Hammersly
-# from skopt.space import Space
+try:
+    from skopt.sampler import Hammersly
+    from skopt.space import Space
+except ImportError:
+    print(
+        "Scikit-optimize not installed. This is not essential since it is only used for the Hammersly scan pattern. "
+        + "We recommend using Halton, Sobol, or Latin hypercube instead."
+    )
+
 
 SUPPORTED_FEATURE_TYPES = ["polynomial", "rbf"]
 SUPPORTED_MODEL_TYPES = ["slads-net"]
@@ -132,6 +139,7 @@ class SampleParams:
     random_seed: int = None
     initial_idxs: list = None
     initial_mask_type: str = "halton"
+    gen_scrambled_initial_mask: bool = False
     initial_mask: np.ndarray = dt.field(init=False)
     line_revisit: bool = False  # not in use right now
     rng: np.random.Generator = None
@@ -174,7 +182,6 @@ class SampleParams:
 
         if self.scan_method == "linewise":
             new_idxs, new_mask = self._gen_linewise_scan()
-        print(self.scan_method, self.initial_mask_type)
         # scan_method is eithe rpointwise or random
         match self.initial_mask_type:
             case "random":
@@ -198,30 +205,35 @@ class SampleParams:
     def _gen_hammersly_scan(self):
         # Use the Hammersly sequence to generate the low discrepancy random scan points
 
-        raise NotImplementedError(
-            "Scikit optimize has not been updated to keep up with new >1.24 typing conventions, \
-            and using it with newer numpy versions gives errors. Disabling the Hammersely \
-            sequence until this issue is resolved."
-        )
-
         seed = self.rng.integers(1000)
 
-        space = Space([[0, self.image_shape[0] - 1], [0, self.image_shape[1] - 1]])
-        sampler = Hammersly()
-        new_idxs = np.array(sampler.generate(space, self.initial_scan_points_num, random_state=seed))
+        try:
+            space = Space([[0, self.image_shape[0] - 1], [0, self.image_shape[1] - 1]])
+            sampler = Hammersly()
+            new_idxs = np.array(sampler.generate(space, self.initial_scan_points_num, random_state=seed))
+        except AttributeError:
+            print(
+                "Hammersly pattern is geenrated using the scikit-optimize package, which has not been updated for "
+                + "compatibility with newer >1.24 versions of numpy. While we recommend using Sobol or Halton patterns instead, "
+                + "it is possible to generate the Hammersly pattern with some customizations. See: "
+                + "https://github.com/scikit-optimize/scikit-optimize/issues/1158 for the monkey-patch."
+            )
+            raise
+
         mask = np.zeros(self.image_shape, dtype="bool")
         mask[new_idxs[:, 0], new_idxs[:, 1]] = 1
+
         return new_idxs, mask
 
     def _gen_scipy_quasi_monte_carlo_scan(self):
         seed = self.rng.integers(1000)
         match self.initial_mask_type:
             case "sobol":
-                sampler = qmc.Sobol(d=2, seed=seed)
+                sampler = qmc.Sobol(d=2, seed=seed, scramble=self.gen_scrambled_initial_mask)
             case "halton":
-                sampler = qmc.Halton(d=2, seed=seed)
+                sampler = qmc.Halton(d=2, seed=seed, scramble=self.gen_scrambled_initial_mask)
             case "latin-hypercube":
-                sampler = qmc.LatinHypercube(d=2, seed=seed)
+                sampler = qmc.LatinHypercube(d=2, seed=seed, scramble=self.gen_scrambled_initial_mask)
 
         samples = sampler.integers(
             n=self.initial_scan_points_num,
