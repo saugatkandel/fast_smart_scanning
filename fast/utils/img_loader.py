@@ -45,8 +45,9 @@ from typing import Union
 import numpy as np
 import numpy.typing as npt
 import tifffile as tif
+from PIL import Image
 
-SUPPORTED_IMAGE_FORMATS = ["tif", "tiff", "npy"]
+SUPPORTED_IMAGE_FORMATS = ["tif", "tiff", "npy", "png", "eps"]
 
 
 def renormalize(image: npt.NDArray, max_value: float = 100.0, min_value: float = 0):
@@ -54,8 +55,8 @@ def renormalize(image: npt.NDArray, max_value: float = 100.0, min_value: float =
     return image_norm
 
 
-def load_image_list_renormalize(
-    imgs_list: list[Union[str, Path]],
+def load_image_path_list_renormalize(
+    img_paths_list: list[Union[str, Path]],
     img_format: str,
     renormalize_images: bool = True,
     max_normalized_value: float = 100,
@@ -65,9 +66,11 @@ def load_image_list_renormalize(
 
     match img_format:
         case "npy":
-            images = [np.load(img) for img in imgs_list]
+            images = [np.load(img) for img in img_paths_list]
         case "tif" | "tiff":
-            images = [tif.imread(img) for img in imgs_list]
+            images = [tif.imread(img) for img in img_paths_list]
+        case "png" | "eps":
+            images = [np.array(Image.open(img).convert("L")) for img in img_paths_list]
 
     if renormalize_images:
         images = [renormalize(img, max_value=max_normalized_value, min_value=min_normalized_value) for img in images]
@@ -85,6 +88,6 @@ def load_image_path_renormalize(
     if img_suffix is None:
         img_suffix = img_format
     image_files = list(Path(imgs_path).glob(f"*.{img_suffix}"))
-    return load_image_list_renormalize(
+    return load_image_path_list_renormalize(
         image_files, img_format, renormalize_images, max_normalized_value, min_normalized_value
     )
