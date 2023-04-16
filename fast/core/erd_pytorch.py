@@ -42,27 +42,40 @@ import dataclasses as dt
 
 import joblib
 import numpy as np
-from sklearn.neural_network import MLPRegressor as nnr
+import torch
+from torch import nn
 
-from ..input_params import SladsModelParams
+from ..input_params import SladsPytorchModelParams
+from .erd import ERDModel
 
-
-class ERDModel:
-    def __init__(self, model_type: str):
-        if model_type not in ["slads-net", "slads-net-pytorch"]:
-            raise NotImplementedError
-        self.model_type = model_type
-        self._fitted = False
-        self.model = None
-
-    def predict(self, poly_features):
-        assert self._fitted
-        return self.model.predict(poly_features)
+ACTIVATIONS = {"leakyrelu": torch.nn.LeakyReLU, "relu": torch.nn.ReLU, "identity": torch.nn.Identity}
 
 
-class SladsSklearnModel(ERDModel):
-    def __init__(self, load_path: str = None, model_params: SladsModelParams = None):
-        super().__init__(model_type="slads-net")
+class NeuralNetwork(nn.Module):
+    def __init__(self, n_layers: int = 5, n_hidden_layers: int = 50, activation: str = "leakyrelu"):
+        super(NeuralNetwork, self).__init__()
+
+        activation_fn = ACTIVATIONS[activation]
+
+        stack = []
+        for n in range(n_layers):
+            if n != n_layers - 1:
+                stack.append(nn.LazyLinear(n_hidden_layers))
+            else:
+                stack.append(nn.LazyLinear(1))
+            stack.append(activation_fn())
+
+        self.linear_stack = nn.Sequential(*stack)
+
+    def forward(self, x):
+        erds = self.linear_stack(x)
+        return erds
+
+
+class SladsPytorchModel(ERDModel):
+    def __init__(self, load_path: str = None, model_params: SladsPytorchModelParams = None):
+        super().__init__(model_type="slads-net-pytorch")
+        self.model_params = model_params
 
         if load_path is not None:
             self._load_from_path(load_path)
@@ -73,12 +86,15 @@ class SladsSklearnModel(ERDModel):
             self._fitted = False
 
     def _load_from_path(self, model_path: str):
-        self.model_params = None
         self.model_path = model_path
-        self.model = joblib.load(self.model_path)
+
+        model_state_dict = torch.load(self.model_path)
+        cuda_status = torch.backends.cuda.isavailable()
+        mps_status = torch.backends
 
     def _setup_training(self, model_params):
-        self.model_params = SladsModelParams() if model_params is None else model_params
+        self.model_params = SladsPytorchModelParams() if model_params is None else model_params
+
         self.model = nnr(**dt.asdict(self.model_params))
 
     def fit(self, poly_features: np.ndarray, erds: np.ndarray):

@@ -55,7 +55,7 @@ except ImportError:
 
 
 SUPPORTED_FEATURE_TYPES = ["polynomial", "rbf"]
-SUPPORTED_MODEL_TYPES = ["slads-net"]
+SUPPORTED_MODEL_TYPES = ["slads-net", "slads-net-pytorch"]
 SUPPORTED_SAMPLING_TYPES = ["slow_detailed", "fast_limited"]
 SCAN_TYPES = ["transmission", "diffraction"]
 GRID_TO_PIXEL_METHODS = ["pixel", "subpixel"]
@@ -95,6 +95,18 @@ class SladsModelParams:
     max_iter: int = 500
     alpha: float = 1e-4
     learning_rate_init: float = 1e-3
+
+
+@dt.dataclass(frozen=True)
+class SladsPytorchModelParams:
+    backend: str = "cuda"
+    random_state: int = 1
+    activation: str = "leakyrelu"
+    hidden_layer_sizes: tuple = (50, 5)
+    solver: str = "adam"
+    max_iter: int = 100
+    learning_rate_init: float = 1e-3
+    mixed_precision: bool = True
 
 
 @dt.dataclass(frozen=True)
