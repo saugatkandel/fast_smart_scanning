@@ -10,7 +10,7 @@ authors = [
 description = "Fast Autonomous Scanning Toolkit"
 readme = "README.md"
 license = {file = "LICENSE.txt"}
-#requires-python = "~=3.10"
+requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scipy",
