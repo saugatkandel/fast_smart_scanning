@@ -7,7 +7,21 @@ in the manuscript:
 
 The preprint of the manuscript is hosted at https://arxiv.org/abs/2301.05286
 
-### Code details:
+---
+- [Fast Autonomous Scanning Toolkit (FAST)](#fast-autonomous-scanning-toolkit-fast)
+    - [Code details](#code-details)
+      - [Added 04/02/23](#added-040223)
+    - [Code examples](#code-examples)
+      - [Added 04/02/23:](#added-040223-1)
+    - [Installation](#installation)
+      - [Added 04/02/23:](#added-040223-2)
+    - [Use](#use)
+    - [Paper data](#paper-data)
+    - [GUI Prototype (Added 05/05/23):](#gui-prototype-added-050523)
+
+---
+
+### Code details
 
 At the backend, FAST adapts the SLADS-Net [^1] and SLADS [^2] algorithms from the papers and from the
 repositories of the paper authors. In addition, FAST also contains code specific to
@@ -18,7 +32,7 @@ the adoption at the Sector 26 beamline of APS. The code breakdown is as follows:
 - The `fast/s26_analysis` submodule contains routines for simulation and analysis corresponding to S26. 
 - The `input_params.py` file contains default input settings for simulation, experiment, training, etc.
 
-#### Added 04/02/23:
+#### Added 04/02/23
 
 - The new version of the code has been modified to use the Sobol, Halton, or Latin-hypercube initializations using the Scipy package instead of the Hammersly initialization using the Scikit-optimize package. This is because the Scikit-optimize package has not been updated to support `numpy>=1.24`. If the Hammersly initialization is desired, then the Scikit-image package needs to be modified manually using the instructions here: https://github.com/scikit-optimize/scikit-optimize/issues/1147.
 - The new version of the code also contains an option to generate the scan pattern based on expected feature size, to ensure that `>99%` of image patches of the provided size are sampled during the initial scan. This function, which is in `fast/utils/generate_scan_pattern.py`, has not been included in any of the example notebooks just yet. 
@@ -91,3 +105,16 @@ we can follow the same code pattern demonstrated in the jupyter notebooks.
 ### Paper data
 
 The data used in the paper wil be added to the respository in the near future. In the meantime, it can be provided upon reasonable request. 
+
+
+### GUI Prototype (Added 05/05/23):
+
+To try the prototype UI, check out the `gui_prototype` branch and install the package using the `gui_protoype` optional dependency:
+```shell
+pip install -e .[gui_prototype]
+```
+
+Then run 
+```shell
+python work_directory/plotly_test.py
+```
