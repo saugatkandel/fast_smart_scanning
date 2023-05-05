@@ -37,3 +37,10 @@ beamline = [
     "paramiko",
     "tk"
 ]
+
+gui_prototype = [
+    "flask",
+    "dash",
+    "plotly",
+    "opencv-python"
+]
