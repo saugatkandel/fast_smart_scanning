@@ -1,6 +1,6 @@
-# Fast Autonomous Scanning Toolkit (FAST)
+# Fast Autonomous Scanning Toolkit (FAST) 
 
-This repository contains the code for the Fast Autonomous Scanning Toolkit (FAST) reported 
+This repository (doi:10.5281/zenodo.7916574)contains the code for the Fast Autonomous Scanning Toolkit (FAST) reported 
 in the manuscript: 
 "Demonstration of an AI-driven workflow for autonomous high-resolution scanning microscopy"
 
