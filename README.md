@@ -1,4 +1,6 @@
-[![DOI](https://zenodo.org/badge/{504649998}.svg)](https://zenodo.org/badge/latestdoi/{504649998})
+[![DOI](https://zenodo.org/badge/504649998.svg)](https://zenodo.org/badge/latestdoi/504649998)
+
+
 
 # Fast Autonomous Scanning Toolkit (FAST) 
 
