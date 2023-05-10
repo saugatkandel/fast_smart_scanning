@@ -91,7 +91,17 @@ class ScanUI:
         print(incoming_im.shape)
         print(type(incoming_im))
         im = cv2.cvtColor(incoming_im, cv2.COLOR_BGR2GRAY)
-        scans = self.run_scan(im)
+
+        # Rescale Image
+        target_px = 256
+        if im.shape[1] > target_px:
+            scale = im.shape[1] / target_px
+            width = int(im.shape[1] * scale / 100)
+            height = int(im.shape[0] * scale / 100)
+            dim = (width, height)
+            resized = cv2.resize(im, dim, interpolation = cv2.INTER_AREA)
+
+        scans = self.run_scan(resized)
 
 
         ims = []
