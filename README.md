@@ -41,7 +41,7 @@ the adoption at the Sector 26 beamline of APS. The code breakdown is as follows:
 [^2]: Godaliyadda, G. M. Dilshan P., Dong Hye Ye, Michael D. Uchic, Michael A. Groeber, Gregery T. Buzzard, and Charles A. Bouman. “A Framework for Dynamic Image Sampling Based on Supervised Learning.” IEEE Transactions on Computational Imaging 4, no. 1 (March 2018): 1–16. https://doi.org/10.1109/TCI.2017.2777482.
 
 
-
+---
 
 ### Code examples
 Examples for training and numerical simulation using the FAST code are located in `work_directory`. 
@@ -118,3 +118,8 @@ Then run
 ```shell
 python work_directory/plotly_test.py
 ```
+
+This should generate an output like:\
+`Dash is running on http://127.0.0.1:8050/`
+
+Copy the url generated to the browser.
