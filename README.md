@@ -12,6 +12,10 @@ in the manuscript:
 
 The preprint of the manuscript is hosted at https://arxiv.org/abs/2301.05286
 
+The raw data used in the manuscript can be accessed at [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7939730.svg)](https://doi.org/10.5281/zenodo.7939730)
+
+
+
 ### Code details:
 
 At the backend, FAST adapts the SLADS-Net [^1] and SLADS [^2] algorithms from the papers and from the
