@@ -49,6 +49,15 @@ from ..core.measurement_interface import ExternalMeasurementInterface
 from ..input_params import ERDInputParams, GeneralInputParams, SampleParams
 from ..utils.readMDA import readMDA
 
+try:
+    import hdf5plugin  # isort:skip
+    import h5py  # isort:skip
+except ImportError:
+    print(
+        "Cannot find hdf5plugin and h5py packages. Cannot run the read_mda_h5_chunks_custom_roi function. "
+        "Since this function has a very specific use case, this error can generally be ignored."
+    )
+
 
 def create_experiment_sample(
     numx: int,
@@ -164,3 +173,50 @@ def read_mda_chunks(
 def blind_scale_positions(pos1d: npt.NDArray, expected_size: int):
     pos = (pos1d - pos1d.min()) / (pos1d.max() - pos1d.min()) * (expected_size - 1)
     return pos
+
+
+def read_mda_h5_chunks_custom_roi(
+    mdafiles: list,
+    h5files: list,
+    x_scaling: float,
+    y_scaling: float,
+    roi: list = None,
+    round_to_int: bool = False,
+):
+    if roi is None:
+        roi = [[810, 840], [388, 418]]
+    xpoints = []
+    ypoints = []
+    intensities = []
+    xpoints_min = 0
+    ypoints_min = 0
+    for mdafile, h5file in zip(mdafiles, h5files):
+        mda = readMDA(mdafile, verbose=False)
+        with h5py.File(h5file) as hf:
+            h5data = hf["entry/data/data"][..., roi[0][0] : roi[0][1], roi[1][0] : roi[1][1]]
+            h5data[h5data > 1e8] = 0
+
+        intensities_this = h5data.sum(axis=(-1, -2))
+        norm_counts = np.array(mda[1].d[0].data)
+        intensities_normed = intensities_this.reshape(norm_counts.shape) / norm_counts
+
+        xpoints.append(mda[1].p[0].data)
+        ypoints.append(mda[1].p[1].data)
+        intensities.append(intensities_normed)
+        xpoints_min = np.minimum(xpoints_min, np.min(xpoints[-1]))
+        ypoints_min = np.minimum(ypoints_min, np.min(ypoints[-1]))
+
+    xpoints_fin = []
+    ypoints_fin = []
+    idxs_all = []
+    for xvals, yvals in zip(xpoints, ypoints):
+        xps = (np.array(xvals) - xpoints_min) / x_scaling
+        yps = (np.array(yvals) - ypoints_min) / y_scaling
+        if round_to_int:
+            xps = np.round(xps).astype("int")
+            yps = np.round(yps).astype("int")
+        idxs = np.array([yps, xps]).T
+        xpoints_fin.append(xps)
+        ypoints_fin.append(yps)
+        idxs_all.append(idxs)
+    return xpoints_fin, ypoints_fin, idxs_all, intensities
