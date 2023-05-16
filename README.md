@@ -14,6 +14,8 @@ The preprint of the manuscript is hosted at https://arxiv.org/abs/2301.05286
 
 The raw data used in the manuscript can be accessed at [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7939730.svg)](https://doi.org/10.5281/zenodo.7939730)
 
+The video demonstrating the experiment in action is shown in https://danielzt12.github.io/latest_news/2022/10/05/AI-enabled-smart-scanning.html
+
 
 
 ### Code details:
