@@ -100,6 +100,8 @@ class ScanUI:
             height = int(im.shape[0] * scale / 100)
             dim = (width, height)
             resized = cv2.resize(im, dim, interpolation = cv2.INTER_AREA)
+        else:
+            resized = im
 
         scans = self.run_scan(resized)
 
@@ -108,8 +110,12 @@ class ScanUI:
         print(scans.shape)
 
         scans_norm = (scans-np.min(scans))/(np.max(scans)-np.min(scans))
-        for i in range(scans_norm.shape[0]):
-            ims.append(scans_norm[i])
+        num_show = 10
+        num_px = scans_norm.shape[0] * scans_norm.shape[1]
+        num_px_step = 50
+        for i in range(0, scans_norm.shape[0], scans_norm.shape[0] // num_show):
+            im_idx = i + scans_norm.shape[0] % num_show - 1
+            ims.append((scans_norm[im_idx], str((im_idx * num_px_step) / num_px)))
 
         print('done')
         
