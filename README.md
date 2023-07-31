@@ -29,6 +29,10 @@ the adoption at the Sector 26 beamline of APS. The code breakdown is as follows:
 - The `fast/s26_analysis` submodule contains routines for simulation and analysis corresponding to S26. 
 - The `input_params.py` file contains default input settings for simulation, experiment, training, etc.
 
+
+### TODO (Added 07/31/23):
+- There is a bug in the code that pops up at the final step when the FAST simulation/experiment is used to measure 100% of the scan points. I added a workaround in the `work_directory/sims_paper/simulations_full.ipynb` notebook: running the FAST scan to measyre up to 99% of the scan points.  The release in Zenodo still contains this bug, but this workaround should work for all realistic scenarios. Bug needs to be properly fixed in a future release.
+
 #### Added 04/02/23:
 
 - The new version of the code has been modified to use the Sobol, Halton, or Latin-hypercube initializations using the Scipy package instead of the Hammersly initialization using the Scikit-optimize package. This is because the Scikit-optimize package has not been updated to support `numpy>=1.24`. If the Hammersly initialization is desired, then the Scikit-image package needs to be modified manually using the instructions here: https://github.com/scikit-optimize/scikit-optimize/issues/1147.
@@ -98,7 +102,3 @@ pip install -e .[odl]
 
 The jupyter notebooks in `work_directory` contain the example codes. To use the API within a python script, 
 we can follow the same code pattern demonstrated in the jupyter notebooks.
-
-### Paper data
-
-The data used in the paper wil be added to the respository in the near future. In the meantime, it can be provided upon reasonable request. 
